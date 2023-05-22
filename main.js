@@ -50,6 +50,10 @@ var ST_Token = /** @class */ (function () {
         }
         return this.text.match(/\S/) === null;
     };
+    ST_Token.prototype.isLiteral = function () {
+        return ST_Token.LITERAL_TOKENS.indexOf(this.type) >= 0;
+    };
+    ST_Token.LITERAL_TOKENS = ['!{', '}', '[', '!]', '~'];
     return ST_Token;
 }());
 var Lexer = /** @class */ (function () {
@@ -90,13 +94,12 @@ while (!reachedEnd) {
     var token = new ST_Token();
     token.lineNumber = lexer.lineNumber;
     token.column = lexer.column;
-    var literalTokens = ['!{', '}', '[', '!]'];
     var foundLiteralToken = false;
-    for (var i = 0; i < literalTokens.length; i++) {
-        var lt = literalTokens[i];
+    for (var i = 0; i < ST_Token.LITERAL_TOKENS.length; i++) {
+        var lt = ST_Token.LITERAL_TOKENS[i];
         if (lexer.startsWith(lt)) {
             foundLiteralToken = true;
-            token.type = literalTokens[i];
+            token.type = ST_Token.LITERAL_TOKENS[i];
             lexer.tokens.push(token);
             reachedEnd = lexer.advance(lt.length)[1];
             break;
@@ -224,9 +227,12 @@ var Parser = /** @class */ (function () {
         this.objects = [this.root];
     }
     Parser.prototype.parse = function (tokens) {
-        this.tokens = tokens.slice();
+        if (tokens.length <= 0) {
+            return root;
+        }
         while (this.tkCursor < tokens.length) {
             var parent_1 = this.objects[this.objects.length - 1];
+            var lastToken = this.tkCursor >= 1 ? tokens[this.tkCursor - 1] : new ST_Token();
             var tokenNow = tokens[this.tkCursor++];
             switch (tokenNow.type) {
                 case 'text':
@@ -236,26 +242,37 @@ var Parser = /** @class */ (function () {
                     break;
                 case '!{':
                     {
-                        checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '[']);
-                        var object = new ST_Object();
-                        object.attributes = textToAttributes(tokens[this.tkCursor++].text);
-                        object.parent = parent_1;
-                        parent_1.body.push(object);
-                        this.objects.push(object);
-                        this.tkCursor += 2;
+                        if (lastToken.type === '~') {
+                            parent_1.appendTextToBody(tokenNow.type);
+                        }
+                        else {
+                            checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '[']);
+                            var object = new ST_Object();
+                            object.attributes = textToAttributes(tokens[this.tkCursor++].text);
+                            object.parent = parent_1;
+                            parent_1.body.push(object);
+                            this.objects.push(object);
+                            this.tkCursor += 2;
+                        }
                     }
                     break;
                 case '!]':
                     {
-                        if (this.objects.length <= 1) {
-                            console.error(colors.red("Error at ".concat(tokenNow.docLocation(srcPath), " : unexpected ").concat(tokenNow.type)));
-                            process.exit(6969);
+                        if (lastToken.type === '~') {
+                            parent_1.appendTextToBody(tokenNow.type);
                         }
-                        this.objects.pop();
+                        else {
+                            if (this.objects.length <= 1) {
+                                console.error(colors.red("Error at ".concat(tokenNow.docLocation(srcPath), " : unexpected ").concat(tokenNow.type)));
+                                process.exit(6969);
+                            }
+                            this.objects.pop();
+                        }
                     }
                     break;
                 case '[':
                 case '}':
+                case '~':
                     {
                         parent_1.appendTextToBody(tokenNow.type);
                     }
@@ -279,7 +296,7 @@ function dumpTree(object, level) {
     var e_3, _a, e_4, _b;
     if (level === void 0) { level = 0; }
     var indent = '';
-    for (var i = 0; i < level; i++) {
+    for (var i = 0; i < level * 4; i++) {
         indent += ' ';
     }
     var toPrint = indent;
@@ -307,7 +324,7 @@ function dumpTree(object, level) {
             else {
                 console.log(toPrint + '"');
                 toPrint = indent + '"';
-                dumpTree(child, level + 4);
+                dumpTree(child, level + 1);
             }
         }
     }

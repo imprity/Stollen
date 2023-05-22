@@ -6,9 +6,10 @@ const srcPath = './test.st'
 
 const src: string = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 
-type ST_TokenTypes = '!{' | '}' | '[' | '!]' | 'text' | 'unknown';
+type ST_TokenTypes = '!{' | '}' | '[' | '!]' | '~' | 'text' | 'unknown';
 
 class ST_Token {
+    static readonly LITERAL_TOKENS :ST_TokenTypes[] = ['!{' , '}' , '[' , '!]' , '~'];
     type: ST_TokenTypes = 'unknown';
     text: string = '';
     column: number = 0;
@@ -24,6 +25,10 @@ class ST_Token {
             return false;
         }
         return this.text.match(/\S/) === null;
+    }
+
+    isLiteral() : boolean{
+        return ST_Token.LITERAL_TOKENS.indexOf(this.type) >= 0;
     }
 }
 
@@ -73,15 +78,14 @@ while (!reachedEnd) {
     token.lineNumber = lexer.lineNumber;
     token.column = lexer.column;
 
-    let literalTokens: Array<ST_TokenTypes> = ['!{', '}', '[', '!]'];
     let foundLiteralToken = false;
 
-    for (let i = 0; i < literalTokens.length; i++) {
-        let lt = literalTokens[i];
+    for (let i = 0; i < ST_Token.LITERAL_TOKENS.length; i++) {
+        let lt = ST_Token.LITERAL_TOKENS[i];
         if (lexer.startsWith(lt)) {
             foundLiteralToken = true;
 
-            token.type = literalTokens[i];
+            token.type = ST_Token.LITERAL_TOKENS[i];
 
             lexer.tokens.push(token)
 
@@ -209,15 +213,18 @@ function checkSeriesOfType(
 }
 
 class Parser{
-    tokens : ST_Token[];
     tkCursor = 0;
     root = new ST_Object();
     objects: Array<ST_Object> = [this.root];
 
     parse(tokens : ST_Token[]) : ST_Object{
-        this.tokens = tokens.slice();
+        if(tokens.length <= 0){
+            return root;
+        }
+
         while (this.tkCursor < tokens.length) {
             let parent = this.objects[this.objects.length - 1];
+            let lastToken = this.tkCursor >= 1 ? tokens[this.tkCursor-1] : new ST_Token()
             let tokenNow = tokens[this.tkCursor++];
         
             switch (tokenNow.type) {
@@ -225,27 +232,38 @@ class Parser{
                     parent.appendTextToBody(tokenNow.text)
                 } break;
                 case '!{': {
-                    checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '[']);
-        
-                    let object = new ST_Object();
-                    object.attributes = textToAttributes(tokens[this.tkCursor++].text);
-        
-                    object.parent = parent;
-                    parent.body.push(object);
-        
-                    this.objects.push(object);
-        
-                    this.tkCursor += 2;
+                    if(lastToken.type === '~'){
+                        parent.appendTextToBody(tokenNow.type);
+                    }
+                    else{
+                        checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '[']);
+            
+                        let object = new ST_Object();
+                        object.attributes = textToAttributes(tokens[this.tkCursor++].text);
+            
+                        object.parent = parent;
+                        parent.body.push(object);
+            
+                        this.objects.push(object);
+            
+                        this.tkCursor += 2;
+                    }
                 } break;
                 case '!]':{
-                    if(this.objects.length <= 1){
-                        console.error(colors.red(`Error at ${tokenNow.docLocation(srcPath)} : unexpected ${tokenNow.type}`));
-                        process.exit(6969);
+                    if(lastToken.type === '~'){
+                        parent.appendTextToBody(tokenNow.type);
                     }
-                    this.objects.pop();
+                    else{
+                        if(this.objects.length <= 1){
+                            console.error(colors.red(`Error at ${tokenNow.docLocation(srcPath)} : unexpected ${tokenNow.type}`));
+                            process.exit(6969);
+                        }
+                        this.objects.pop();
+                    }
                 } break;
                 case '[':
-                case '}':{
+                case '}':
+                case '~':{
                     parent.appendTextToBody(tokenNow.type);
                 }break;
                 default : {
@@ -268,7 +286,7 @@ let root = parser.parse(lexer.tokens);
 
 function dumpTree(object : ST_Object , level  = 0){
     let indent = ''
-    for(let i=0; i<level; i++){
+    for(let i=0; i<level*4; i++){
         indent += ' ';
     }
     let toPrint = indent;
@@ -286,7 +304,7 @@ function dumpTree(object : ST_Object , level  = 0){
         else{
             console.log(toPrint+ '"');
             toPrint = indent + '"';
-            dumpTree(child, level+4);
+            dumpTree(child, level+1);
         }
     }
     console.log(toPrint + '"' +colors.blue(']'))
