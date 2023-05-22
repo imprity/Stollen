@@ -237,6 +237,9 @@ while (tkCursor < tokens.length) {
             break;
     }
 }
+if (objects.length > 1) {
+    console.warn("Warning : ".concat(objects.length - 1, " missing '!]'"));
+}
 function dumpTree(object, level) {
     var e_3, _a, e_4, _b;
     if (level === void 0) { level = 0; }
@@ -284,6 +287,6 @@ function dumpTree(object, level) {
         }
         finally { if (e_4) throw e_4.error; }
     }
-    console.log(toPrint + ' ]');
+    console.log(toPrint + ']');
 }
 dumpTree(root);

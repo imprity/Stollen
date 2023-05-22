@@ -226,6 +226,10 @@ while (tkCursor < tokens.length) {
     }
 }
 
+if(objects.length > 1){
+    console.warn(`Warning : ${objects.length - 1} missing '!]'`)
+}
+
 function dumpTree(object : ST_Object , level  = 0){
     let indent = ''
     for(let i=0; i<level; i++){
@@ -253,7 +257,7 @@ function dumpTree(object : ST_Object , level  = 0){
             dumpTree(child, level+4);
         }
     }
-    console.log(toPrint + ' ]')
+    console.log(toPrint + ']')
 }
 
 dumpTree(root);

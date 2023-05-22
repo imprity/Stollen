@@ -1,3 +1,10 @@
-hello world
+!{div}[
+    hello sailor
+    !{div width 600 height 600}[
+        !{p}[hi seaman!]
+        !{p}[sup brah!]
+    !]
+    yo
+!]
 
-nice to meet you
+goodbye world
