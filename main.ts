@@ -13,6 +13,18 @@ class ST_Token {
     text: string = '';
     column: number = 0;
     lineNumber: number = 0;
+
+    docLocation(srcPath : string) : string{
+        return `"${srcPath}:${this.lineNumber + 1}:${this.column+1}"`
+    }
+    
+    isWhiteSpace() : boolean{
+        if(this.type !== 'text'){
+            console.warn(`Warning : asking token if it's white space when it's type is ${this.type}`)
+            return false;
+        }
+        return this.text.match(/\S/) === null;
+    }
 }
 
 class Lexer {
@@ -110,9 +122,20 @@ class ST_Object {
     attributes: Array<string> = [];
     body: Array<string | ST_Object> = [];
     parent: ST_Object | null = null;
+
+    appendTextToBody(text : string){
+        //if last element of body is not text or just empty, then append new string element
+        if (this.body.length <= 0 || typeof (this.body[this.body.length-1]) !== 'string') {
+            this.body.push(text);
+        }
+        //else we appen text to existing element
+        else {
+            this.body[this.body.length-1] += text;
+        }
+    }
 }
 
-function lineToWords(str: string): Array<string> {
+function textToAttributes(str: string): Array<string> {
     let arr: Array<string> = [];
     for (const match of str.matchAll(/\S+/g)) {
         arr.push(match[0]);
@@ -133,7 +156,7 @@ function checkType(
             return null;
         }
     }
-    let errorMsg = `Error at "${srcPath}:${token.lineNumber + 1}:${token.column+1}" : expected `;
+    let errorMsg = `Error at ${token.docLocation(srcPath)} : expected `;
 
     for (let i = 0; i < possibleTypes.length; i++) {
         errorMsg += `${possibleTypes[i]} `
@@ -185,51 +208,63 @@ function checkSeriesOfType(
     return null;
 }
 
-let tokens = lexer.tokens.slice();
-let tkCursor = 0;
-let root = new ST_Object();
-let objects: Array<ST_Object> = [root];
+class Parser{
+    tokens : ST_Token[];
+    tkCursor = 0;
+    root = new ST_Object();
+    objects: Array<ST_Object> = [this.root];
 
-while (tkCursor < tokens.length) {
-    let parent = objects[objects.length - 1];
-    let tokenNow = tokens[tkCursor++];
-
-    switch (tokenNow.type) {
-        case 'text': {
-            if (parent.body.length <= 0 || typeof (parent.body[parent.body.length-1]) !== 'string') {
-                parent.body.push(tokenNow.text);
+    parse(tokens : ST_Token[]) : ST_Object{
+        this.tokens = tokens.slice();
+        while (this.tkCursor < tokens.length) {
+            let parent = this.objects[this.objects.length - 1];
+            let tokenNow = tokens[this.tkCursor++];
+        
+            switch (tokenNow.type) {
+                case 'text': {
+                    parent.appendTextToBody(tokenNow.text)
+                } break;
+                case '!{': {
+                    checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '[']);
+        
+                    let object = new ST_Object();
+                    object.attributes = textToAttributes(tokens[this.tkCursor++].text);
+        
+                    object.parent = parent;
+                    parent.body.push(object);
+        
+                    this.objects.push(object);
+        
+                    this.tkCursor += 2;
+                } break;
+                case '!]':{
+                    if(this.objects.length <= 1){
+                        console.error(colors.red(`Error at ${tokenNow.docLocation(srcPath)} : unexpected ${tokenNow.type}`));
+                        process.exit(6969);
+                    }
+                    this.objects.pop();
+                } break;
+                case '[':
+                case '}':{
+                    parent.appendTextToBody(tokenNow.type);
+                }break;
+                default : {
+                    console.error(colors.red(`Error at ${tokenNow.docLocation(srcPath)} : unknown token type : ${tokenNow.type}`));
+                    process.exit(6969);
+                }
             }
-            else {
-                parent.body[parent.body.length-1] += tokenNow.text;
-            }
-        } break;
-        case '!{': {
-            checkSeriesOfType(tokens, tkCursor, ['text', '}', '[']);
+        }
 
-            let object = new ST_Object();
-            object.attributes = lineToWords(tokens[tkCursor++].text);
+        if(this.objects.length > 1){
+            console.warn(colors.yellow(`Warning : ${this.objects.length - 1} missing '!]'`))
+        }
 
-            object.parent = parent;
-            parent.body.push(object);
-
-            objects.push(object);
-
-            tkCursor += 2;
-        } break;
-        case '!]':{
-            if(objects.length <= 1){
-                console.log(objects);
-                console.error(colors.red(`Error at "${srcPath}:${tokenNow.lineNumber + 1}:${tokenNow.column+1}" : unexpected ${tokenNow.type}`));
-                process.exit(6969);
-            }
-            objects.pop();
-        } break;
+        return this.root;
     }
 }
 
-if(objects.length > 1){
-    console.warn(colors.yellow(`Warning : ${objects.length - 1} missing '!]'`))
-}
+let parser = new Parser();
+let root = parser.parse(lexer.tokens);
 
 function dumpTree(object : ST_Object , level  = 0){
     let indent = ''
