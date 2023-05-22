@@ -30,6 +30,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
 var process = require("process");
+var colors = require('colors');
 var srcPath = './test.st';
 var src = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 var ST_Token = /** @class */ (function () {
@@ -168,7 +169,7 @@ function checkType(token, possibleTypes, exitOnError) {
     }
     errorMsg += "but got ".concat(token.type);
     if (exitOnError) {
-        console.error(errorMsg);
+        console.error(colors.red(errorMsg));
         process.exit(6969);
     }
     return errorMsg;
@@ -189,7 +190,7 @@ function checkSeriesOfType(tokens, start, typeArr, exitOnError) {
     if (expectedLength > 0) {
         var errorMsg = 'Error : Unexpected End of File';
         if (exitOnError) {
-            console.error(errorMsg);
+            console.error(colors.red(errorMsg));
             process.exit(6969);
         }
         return errorMsg;
@@ -229,7 +230,7 @@ while (tkCursor < tokens.length) {
             {
                 if (objects.length <= 1) {
                     console.log(objects);
-                    console.error("Error at \"".concat(srcPath, ":").concat(tokenNow.lineNumber + 1, ":").concat(tokenNow.column + 1, "\" : unexpected ").concat(tokenNow.type));
+                    console.error(colors.red("Error at \"".concat(srcPath, ":").concat(tokenNow.lineNumber + 1, ":").concat(tokenNow.column + 1, "\" : unexpected ").concat(tokenNow.type)));
                     process.exit(6969);
                 }
                 objects.pop();
@@ -238,25 +239,21 @@ while (tkCursor < tokens.length) {
     }
 }
 if (objects.length > 1) {
-    console.warn("Warning : ".concat(objects.length - 1, " missing '!]'"));
+    console.warn(colors.yellow("Warning : ".concat(objects.length - 1, " missing '!]'")));
 }
 function dumpTree(object, level) {
     var e_3, _a, e_4, _b;
     if (level === void 0) { level = 0; }
     var indent = '';
     for (var i = 0; i < level; i++) {
-        if (i % 4 == 0) {
-            indent += '|';
-        }
         indent += ' ';
     }
-    indent += '|';
     var toPrint = indent;
-    toPrint += '{';
+    toPrint += colors.blue('{');
     try {
         for (var _c = __values(object.attributes), _d = _c.next(); !_d.done; _d = _c.next()) {
             var attr = _d.value;
-            toPrint += "".concat(attr, ",");
+            toPrint += colors.green("".concat(attr, ", "));
         }
     }
     catch (e_3_1) { e_3 = { error: e_3_1 }; }
@@ -266,7 +263,7 @@ function dumpTree(object, level) {
         }
         finally { if (e_3) throw e_3.error; }
     }
-    toPrint += '}[ ';
+    toPrint += colors.blue('}[') + '"';
     try {
         for (var _e = __values(object.body), _f = _e.next(); !_f.done; _f = _e.next()) {
             var child = _f.value;
@@ -274,8 +271,8 @@ function dumpTree(object, level) {
                 toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
             }
             else {
-                console.log(toPrint);
-                toPrint = indent;
+                console.log(toPrint + '"');
+                toPrint = indent + '"';
                 dumpTree(child, level + 4);
             }
         }
@@ -287,6 +284,6 @@ function dumpTree(object, level) {
         }
         finally { if (e_4) throw e_4.error; }
     }
-    console.log(toPrint + ']');
+    console.log(toPrint + '"' + colors.blue(']'));
 }
 dumpTree(root);

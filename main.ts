@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as process from 'process'
+const colors = require('colors');
 
 const srcPath = './test.st'
 
@@ -144,7 +145,7 @@ function checkType(
     errorMsg += `but got ${token.type}`;
 
     if (exitOnError) {
-        console.error(errorMsg)
+        console.error(colors.red(errorMsg))
         process.exit(6969);
     }
 
@@ -175,7 +176,7 @@ function checkSeriesOfType(
     if(expectedLength > 0){
         let errorMsg = 'Error : Unexpected End of File';
         if(exitOnError){
-            console.error(errorMsg);
+            console.error(colors.red(errorMsg));
             process.exit(6969);
         }
         return errorMsg;
@@ -218,7 +219,7 @@ while (tkCursor < tokens.length) {
         case '!]':{
             if(objects.length <= 1){
                 console.log(objects);
-                console.error(`Error at "${srcPath}:${tokenNow.lineNumber + 1}:${tokenNow.column+1}" : unexpected ${tokenNow.type}`);
+                console.error(colors.red(`Error at "${srcPath}:${tokenNow.lineNumber + 1}:${tokenNow.column+1}" : unexpected ${tokenNow.type}`));
                 process.exit(6969);
             }
             objects.pop();
@@ -227,37 +228,33 @@ while (tkCursor < tokens.length) {
 }
 
 if(objects.length > 1){
-    console.warn(`Warning : ${objects.length - 1} missing '!]'`)
+    console.warn(colors.yellow(`Warning : ${objects.length - 1} missing '!]'`))
 }
 
 function dumpTree(object : ST_Object , level  = 0){
     let indent = ''
     for(let i=0; i<level; i++){
-        if(i%4 == 0){
-            indent += '|'
-        }
         indent += ' ';
     }
-    indent += '|'
     let toPrint = indent;
 
-    toPrint += '{'
+    toPrint += colors.blue('{')
     for(const attr of object.attributes){
-        toPrint += `${attr },`
+        toPrint += colors.green(`${attr }, `);
     }
-    toPrint += '}[ '
+    toPrint += colors.blue('}[') + '"';
 
     for(let child of object.body){
         if(typeof(child) === 'string'){
             toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
         }
         else{
-            console.log(toPrint);
-            toPrint = indent;
+            console.log(toPrint+ '"');
+            toPrint = indent + '"';
             dumpTree(child, level+4);
         }
     }
-    console.log(toPrint + ']')
+    console.log(toPrint + '"' +colors.blue(']'))
 }
 
 dumpTree(root);

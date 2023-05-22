@@ -4,7 +4,7 @@
         !{p}[hi seaman!]
         !{p}[sup brah!]
     !]
-    yo
 !]
+
 
 goodbye world
