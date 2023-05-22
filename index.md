@@ -1,4 +1,4 @@
-# Stolen
+# Stollen
 
 *it's like [pollen](https://git.matthewbutterick.com/mbutterick/pollen) but stolen (and bad)*
 
