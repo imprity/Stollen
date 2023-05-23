@@ -127,6 +127,9 @@ class ST_Object {
     body: Array<string | ST_Object> = [];
     parent: ST_Object | null = null;
 
+    isRoot() : boolean{
+        return this.parent === null;
+    }
     appendTextToBody(text : string){
         //if last element of body is not text or just empty, then append new string element
         if (this.body.length <= 0 || typeof (this.body[this.body.length-1]) !== 'string') {
@@ -236,7 +239,7 @@ class Parser{
                         parent.appendTextToBody(tokenNow.type);
                     }
                     else{
-                        checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '[']);
+                        checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '['], false);
             
                         let object = new ST_Object();
                         object.attributes = textToAttributes(tokens[this.tkCursor++].text);
@@ -311,3 +314,60 @@ function dumpTree(object : ST_Object , level  = 0){
 }
 
 dumpTree(root);
+
+///////////////////////////////////////
+//render the object tree
+///////////////////////////////////////
+
+//it is not the library's role to render the object tree
+//rather library user who decides how to use the object tree
+//this is just a test to see how library functions
+function render(root : ST_Object) : string{
+    let rendered = ""
+    if(root.isRoot()){
+        rendered += "<p><pre>\n"
+    }
+    else{
+        switch(root.attributes[0]){
+            case 'div':{
+                rendered += '<div>\n'
+            }break;
+            case 'p':{
+                rendered += '<p>'
+            }break;
+            default : {
+                rendered += '<p>'
+            }
+        }
+    }
+    
+    for(const child of root.body){
+        if(typeof child === 'string'){
+            rendered += child
+        }
+        else{
+            rendered += render(child);
+        }
+    }
+    
+    if(root.isRoot()){
+        rendered += "</pre></p>"
+    }
+    else{
+        switch(root.attributes[0]){
+            case 'div':{
+                rendered += '\n</div>\n'
+            }break;
+            case 'p':{
+                rendered += '</p>'
+            }break;
+            default : {
+                rendered += '\n</p>'
+            }
+        }
+    }
+
+    return rendered;
+}
+
+fs.writeFileSync('./index.html', render(root))

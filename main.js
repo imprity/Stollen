@@ -132,6 +132,9 @@ var ST_Object = /** @class */ (function () {
         this.body = [];
         this.parent = null;
     }
+    ST_Object.prototype.isRoot = function () {
+        return this.parent === null;
+    };
     ST_Object.prototype.appendTextToBody = function (text) {
         //if last element of body is not text or just empty, then append new string element
         if (this.body.length <= 0 || typeof (this.body[this.body.length - 1]) !== 'string') {
@@ -338,3 +341,73 @@ function dumpTree(object, level) {
     console.log(toPrint + '"' + colors.blue(']'));
 }
 dumpTree(root);
+///////////////////////////////////////
+//render the object tree
+///////////////////////////////////////
+//it is not the library's role to render the object tree
+//rather library user who decides how to use the object tree
+//this is just a test to see how library functions
+function render(root) {
+    var e_5, _a;
+    var rendered = "";
+    if (root.isRoot()) {
+        rendered += "<p><pre>\n";
+    }
+    else {
+        switch (root.attributes[0]) {
+            case 'div':
+                {
+                    rendered += '<div>\n';
+                }
+                break;
+            case 'p':
+                {
+                    rendered += '<p>';
+                }
+                break;
+            default: {
+                rendered += '<p>';
+            }
+        }
+    }
+    try {
+        for (var _b = __values(root.body), _c = _b.next(); !_c.done; _c = _b.next()) {
+            var child = _c.value;
+            if (typeof child === 'string') {
+                rendered += child;
+            }
+            else {
+                rendered += render(child);
+            }
+        }
+    }
+    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+    finally {
+        try {
+            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+        }
+        finally { if (e_5) throw e_5.error; }
+    }
+    if (root.isRoot()) {
+        rendered += "</pre></p>";
+    }
+    else {
+        switch (root.attributes[0]) {
+            case 'div':
+                {
+                    rendered += '\n</div>\n';
+                }
+                break;
+            case 'p':
+                {
+                    rendered += '</p>';
+                }
+                break;
+            default: {
+                rendered += '\n</p>';
+            }
+        }
+    }
+    return rendered;
+}
+fs.writeFileSync('./index.html', render(root));
