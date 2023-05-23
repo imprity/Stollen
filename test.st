@@ -1,10 +1,5 @@
-!{div}[
-    hello sailor
-    !{div width 600 height 600}[
-        !{p}[hi seaman!]
-        !{p}[sup brah!]~!
-    ~!]
+!{div}
+[
+내가 생각해 봤을때 이 코드는 매우
+냄새가 많이 나는거 같애!
 !]
-
-
-goodbye world

@@ -45,7 +45,7 @@ var ST_Token = /** @class */ (function () {
     };
     ST_Token.prototype.isWhiteSpace = function () {
         if (this.type !== 'text') {
-            console.warn("Warning : asking token if it's white space when it's type is ".concat(this.type));
+            console.warn(colors.yellow("Warning : asking token if it's white space when it's type is ".concat(this.type)));
             return false;
         }
         return this.text.match(/\S/) === null;
@@ -249,13 +249,26 @@ var Parser = /** @class */ (function () {
                             parent_1.appendTextToBody(tokenNow.type);
                         }
                         else {
-                            checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '[']);
+                            var amountToAdvance = 0;
+                            var errorMsg = checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '['], false);
+                            if (errorMsg) {
+                                checkSeriesOfType(tokens, this.tkCursor, ['text', '}', 'text', '['], true);
+                                var textBetweenBraces = tokens[this.tkCursor + 2];
+                                if (!textBetweenBraces.isWhiteSpace()) {
+                                    console.error(colors.red("Error at ".concat(textBetweenBraces.docLocation(srcPath), " : there can be only white spaces between } and [")));
+                                    process.exit(6969);
+                                }
+                                amountToAdvance = 4;
+                            }
+                            else {
+                                amountToAdvance = 3;
+                            }
                             var object = new ST_Object();
-                            object.attributes = textToAttributes(tokens[this.tkCursor++].text);
+                            object.attributes = textToAttributes(tokens[this.tkCursor].text);
                             object.parent = parent_1;
                             parent_1.body.push(object);
                             this.objects.push(object);
-                            this.tkCursor += 2;
+                            this.tkCursor += amountToAdvance;
                         }
                     }
                     break;

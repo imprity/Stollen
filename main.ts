@@ -21,7 +21,7 @@ class ST_Token {
     
     isWhiteSpace() : boolean{
         if(this.type !== 'text'){
-            console.warn(`Warning : asking token if it's white space when it's type is ${this.type}`)
+            console.warn(colors.yellow(`Warning : asking token if it's white space when it's type is ${this.type}`))
             return false;
         }
         return this.text.match(/\S/) === null;
@@ -239,17 +239,33 @@ class Parser{
                         parent.appendTextToBody(tokenNow.type);
                     }
                     else{
-                        checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '['], false);
-            
-                        let object = new ST_Object();
-                        object.attributes = textToAttributes(tokens[this.tkCursor++].text);
-            
+                        let amountToAdvance = 0;
+                        let errorMsg = checkSeriesOfType(tokens, this.tkCursor, ['text', '}', '['], false);
+                        
+                        if(errorMsg){
+                            checkSeriesOfType(tokens, this.tkCursor, ['text', '}', 'text', '['], true);
+
+                            let textBetweenBraces = tokens[this.tkCursor + 2];
+                            if(!textBetweenBraces.isWhiteSpace()){
+                                console.error(colors.red(`Error at ${textBetweenBraces.docLocation(srcPath)} : there can be only white spaces between } and [`));
+                                process.exit(6969);
+                            }
+                            amountToAdvance = 4;
+                        }
+                        else{
+                            amountToAdvance = 3;
+                        }
+
+                        let object = new ST_Object()
+
+                        object.attributes = textToAttributes(tokens[this.tkCursor].text);
+                
                         object.parent = parent;
                         parent.body.push(object);
             
                         this.objects.push(object);
             
-                        this.tkCursor += 2;
+                        this.tkCursor += amountToAdvance;
                     }
                 } break;
                 case '!]':{
