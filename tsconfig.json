@@ -3,6 +3,7 @@
         "downlevelIteration": true
     },
     "files": [
-        "main.ts"
+        "main.ts",
+        "stollen.ts"
     ]
 }
