@@ -1,9 +1,11 @@
 {
     "compilerOptions": {
-        "downlevelIteration": true
+        "downlevelIteration": true,
+        "sourceMap": true,
     },
     "files": [
+        "index.ts",
         "main.ts",
-        "stollen.ts"
-    ]
+        "./lib/index.ts",
+    ],
 }

@@ -12,7 +12,7 @@ var __values = (this && this.__values) || function(o) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
-var st = require("./stollen");
+var st = require("./lib/");
 var srcPath = './test.st';
 var src = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 var tokenizer = new st.Tokenizer(src, srcPath);
@@ -69,3 +69,4 @@ function render(root) {
     return rendered;
 }
 fs.writeFileSync('./index.html', render(root));
+//# sourceMappingURL=main.js.map

@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import * as st from './stollen'
+import * as st from './lib/'
 
 const srcPath = './test.st'
 const src: string = fs.readFileSync(srcPath, { encoding: 'utf-8' });
