@@ -1,4 +1,3 @@
-import * as process from 'process'
 import * as colors from 'colors/safe'
 
 const ESCAPE_CHAR = '@'
@@ -202,10 +201,21 @@ class Parser {
         this.tokens = tokens;
     }
 
+    printInColor :boolean = true;
+
+    inRed(str) : string{
+        if(this.printInColor){
+            return colors.red(str);
+        }
+        else{
+            return str;
+        }
+    }
+
     checkType(
         token: Token,
         possibleTypes: TokenTypes[] | TokenTypes,
-        exitOnError: boolean = true): string | null {
+        ): string | null {
         if (typeof (possibleTypes) === 'string') {
             possibleTypes = [possibleTypes];
         }
@@ -217,19 +227,13 @@ class Parser {
         }
         let errorMsg = this.errorWrongType(token, possibleTypes);
 
-        if (exitOnError) {
-            console.error(errorMsg)
-            process.exit(6969);
-        }
-
         return errorMsg;
     }
 
     checkSeriesOfType(
         tokens: Token[],
         start: number,
-        typeArr: (TokenTypes[] | TokenTypes)[],
-        exitOnError: boolean = true): string | null {
+        typeArr: (TokenTypes[] | TokenTypes)[]): string | null {
 
         let expectedLength = typeArr.length;
 
@@ -239,7 +243,7 @@ class Parser {
 
             let token = tokens[start++];
 
-            let errorMsg = this.checkType(token, typeArr[i++], exitOnError);
+            let errorMsg = this.checkType(token, typeArr[i++]);
 
             if (errorMsg) {
                 return errorMsg;
@@ -248,10 +252,6 @@ class Parser {
         //we lack tokens
         if (expectedLength > 0) {
             let errorMsg = this.errorSuddenEnd();
-            if (exitOnError) {
-                console.error(errorMsg);
-                process.exit(6969);
-            }
             return errorMsg;
         }
 
@@ -259,7 +259,7 @@ class Parser {
     }
 
     errorUnexpectedType(token: Token): string {
-        return colors.red(`Error at ${token.docLocation()} : unexpected ${token.type}`);
+        return this.inRed(`Error at ${token.docLocation()} : unexpected ${token.type}`);
     }
     errorWrongType(token: Token, expectedTypes: TokenTypes | TokenTypes[]): string {
         let errorMsg = `Error at ${token.docLocation()} : expecting `
@@ -277,19 +277,21 @@ class Parser {
 
         errorMsg += `but got ${token.type}`
 
-        return colors.red(errorMsg);
+        return this.inRed(errorMsg);
     }
     errorSuddenEnd(): string {
-        return colors.red('Error : source unexpectedly ended')
+        return this.inRed('Error : source unexpectedly ended')
     }
     errorUnknowType(token: Token): string {
-        return colors.red(`Error at ${token.docLocation()} : weird token...`);
+        return this.inRed(`Error at ${token.docLocation()} : weird token...`);
     }
 
-    parse(): Item {
+    parse(errorInColor : boolean): [Item , string | null] {
+
+        this.printInColor = errorInColor;
 
         if (this.tokens.length <= 0) {
-            return this.root;
+            return [this.root, null];
         }
 
         let insideAttributes = false;
@@ -303,14 +305,12 @@ class Parser {
             let nextToken: null | Token = this.tkCursor >= this.tokens.length ? null : this.tokens[this.tkCursor];
 
             if (tokenNow.type === 'unknown') {
-                console.error(this.errorUnknowType(tokenNow));
-                process.exit(6969)
+                return [this.root, this.errorUnknowType(tokenNow)]
             }
 
             if (insideAttributes) {
                 if (nextToken === null) {
-                    console.error(this.errorSuddenEnd());
-                    process.exit(6969);
+                    return [this.root, this.errorSuddenEnd()]
                 }
 
                 if (insideQuote) {
@@ -351,11 +351,10 @@ class Parser {
                             } else {
                                 this.checkSeriesOfType(this.tokens, this.tkCursor, ['text', '['])
                                 if (!nextToken.isWhiteSpace()) {
-                                    console.error(colors.red(
+                                    return [this.root, this.inRed(
                                         `Error at ${nextToken.docLocation()} : ` +
                                         `there can be only whitespaces between } and [`
-                                    ));
-                                    process.exit(6969);
+                                    )]
                                 }
                                 this.tkCursor += 2;
                             }
@@ -402,8 +401,7 @@ class Parser {
                         insideAttributes = true;
 
                         if (nextToken === null) {
-                            console.error(this.errorSuddenEnd());
-                            process.exit(6969);
+                            return [this.root, this.errorSuddenEnd()]
                         }
                     } break;
                     case '!]': {
@@ -412,8 +410,7 @@ class Parser {
                         //prevent popping root from item stack
                         //this happens when src text has mismatching '[' and '!]'
                         if (this.items.length <= 1) {
-                            console.error(this.errorUnexpectedType(tokenNow));
-                            process.exit(6969)
+                            return [this.root, this.errorUnexpectedType(tokenNow)]
                         }
                         this.items.pop();
                     } break;
@@ -429,7 +426,7 @@ class Parser {
             }
         }
 
-        return this.root;
+        return [this.root, null];
     }
 }
 

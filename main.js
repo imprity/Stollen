@@ -1,4 +1,20 @@
 "use strict";
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 var __values = (this && this.__values) || function(o) {
     var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
@@ -13,12 +29,17 @@ var __values = (this && this.__values) || function(o) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
 var st = require("./lib/");
+var process = require("process");
 var srcPath = './test.st';
 var src = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 var tokenizer = new st.Tokenizer(src, srcPath);
 var tokens = tokenizer.tokenize();
 var parser = new st.Parser(tokens);
-var root = parser.parse();
+var _a = __read(parser.parse(process.stdout.isTTY), 2), root = _a[0], errorMsg = _a[1];
+if (errorMsg) {
+    console.error(errorMsg);
+    process.exit(6969);
+}
 if (process.stdout.isTTY) {
     console.log(st.prettyPrint(root, true));
 }

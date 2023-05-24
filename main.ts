@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import * as st from './lib/'
+import * as process from 'process'
 
 const srcPath = './test.st'
 const src: string = fs.readFileSync(srcPath, { encoding: 'utf-8' });
@@ -8,7 +9,12 @@ let tokenizer = new st.Tokenizer(src, srcPath);
 let tokens = tokenizer.tokenize();
 
 let parser = new st.Parser(tokens);
-let root = parser.parse();
+let [root, errorMsg] = parser.parse(process.stdout.isTTY);
+
+if(errorMsg){
+    console.error(errorMsg);
+    process.exit(6969);
+}
 
 if(process.stdout.isTTY){
     console.log(st.prettyPrint(root, true));
