@@ -7,8 +7,14 @@ const src: string = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 let tokenizer = new st.Tokenizer(src, srcPath);
 let tokens = tokenizer.tokenize();
 
-let parser = new st.Parser();
-let root = parser.parse(tokens);
+console.log('----------------')
+console.log(tokens);
+console.log('----------------')
+
+let parser = new st.Parser(tokens);
+let root = parser.parse();
+
+st.dumpTree(root);
 
 ///////////////////////////////////////
 //render the object tree
@@ -23,17 +29,7 @@ function render(root : st.Item) : string{
         rendered += "<p><pre>\n"
     }
     else{
-        switch(root.attributes[0]){
-            case 'div':{
-                rendered += '<div>\n'
-            }break;
-            case 'p':{
-                rendered += '<p>'
-            }break;
-            default : {
-                rendered += '<p>'
-            }
-        }
+        rendered += `<${root.attributes[0]}>`
     }
     
     for(const child of root.body){
@@ -49,17 +45,7 @@ function render(root : st.Item) : string{
         rendered += "</pre></p>"
     }
     else{
-        switch(root.attributes[0]){
-            case 'div':{
-                rendered += '\n</div>\n'
-            }break;
-            case 'p':{
-                rendered += '</p>'
-            }break;
-            default : {
-                rendered += '\n</p>'
-            }
-        }
+        rendered += `</${root.attributes[0]}>`
     }
 
     return rendered;

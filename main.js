@@ -17,8 +17,12 @@ var srcPath = './test.st';
 var src = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 var tokenizer = new st.Tokenizer(src, srcPath);
 var tokens = tokenizer.tokenize();
-var parser = new st.Parser();
-var root = parser.parse(tokens);
+console.log('----------------');
+console.log(tokens);
+console.log('----------------');
+var parser = new st.Parser(tokens);
+var root = parser.parse();
+st.dumpTree(root);
 ///////////////////////////////////////
 //render the object tree
 ///////////////////////////////////////
@@ -32,21 +36,7 @@ function render(root) {
         rendered += "<p><pre>\n";
     }
     else {
-        switch (root.attributes[0]) {
-            case 'div':
-                {
-                    rendered += '<div>\n';
-                }
-                break;
-            case 'p':
-                {
-                    rendered += '<p>';
-                }
-                break;
-            default: {
-                rendered += '<p>';
-            }
-        }
+        rendered += "<".concat(root.attributes[0], ">");
     }
     try {
         for (var _b = __values(root.body), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -70,21 +60,7 @@ function render(root) {
         rendered += "</pre></p>";
     }
     else {
-        switch (root.attributes[0]) {
-            case 'div':
-                {
-                    rendered += '\n</div>\n';
-                }
-                break;
-            case 'p':
-                {
-                    rendered += '</p>';
-                }
-                break;
-            default: {
-                rendered += '\n</p>';
-            }
-        }
+        rendered += "</".concat(root.attributes[0], ">");
     }
     return rendered;
 }
