@@ -1,5 +1,5 @@
 import * as process from 'process'
-const colors = require('colors/safe');
+import * as colors from 'colors/safe'
 
 const ESCAPE_CHAR = '@'
 type TokenTypes = '!{' | '}' | '[' | '!]' | '"' | typeof ESCAPE_CHAR | 'text' | 'unknown';
