@@ -1,5 +1,5 @@
 import * as process from 'process'
-const colors = require('colors');
+const colors = require('colors/safe');
 
 const ESCAPE_CHAR = '@'
 type TokenTypes = '!{' | '}' | '[' | '!]' | '"' | typeof ESCAPE_CHAR | 'text' | 'unknown';
@@ -433,7 +433,14 @@ class Parser {
     }
 }
 
-function dumpTree(item: Item, level = 0): string {
+function prettyPrint(item: Item, inColor : boolean = true , level = 0): string {
+    let inGreen = colors.green;
+    let inBlue = colors.blue;
+    if(!inColor){
+        inGreen = (str : string)=>{return str}
+        inBlue = (str : string)=>{return str}
+    }
+    
     const TAB = 4;
 
     let singleTab = '';
@@ -450,20 +457,20 @@ function dumpTree(item: Item, level = 0): string {
 
     let toPrint = ''
 
-    toPrint += indent + colors.blue('[ {')
+    toPrint += indent + inBlue('[ {')
 
     for (let i = 0, l = item.attributes.length; i < l; i++) {
         const attr = item.attributes[i];
-        toPrint += colors.green(`"${attr.replace(/\"/g, '\\"')}"`);
+        toPrint += inGreen(`"${attr.replace(/\"/g, '\\"')}"`);
         if (i < l - 1) {
             toPrint += ', '
         }
     }
 
-    toPrint += colors.blue('}');
+    toPrint += inBlue('}');
 
     if (item.body.length === 1 && typeof item.body[0] === 'string') {
-        return toPrint += ' "' + item.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + colors.blue(']');
+        return toPrint += ' "' + item.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + inBlue(']');
     }
     else {
         toPrint += '\n'
@@ -473,13 +480,13 @@ function dumpTree(item: Item, level = 0): string {
                 toPrint += indent  + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
             }
             else {
-                toPrint += dumpTree(child, level + 1) + '\n';
+                toPrint += prettyPrint(child, inColor, level + 1) + '\n';
             }
         }
     }
 
 
-    return toPrint + indent + colors.blue(']');
+    return toPrint + indent + inBlue(']');
 }
 
-export { Token, TokenTypes, Tokenizer, Parser, Item, dumpTree }
+export { Token, TokenTypes, Tokenizer, Parser, Item, prettyPrint}

@@ -14,7 +14,13 @@ let tokens = tokenizer.tokenize();
 let parser = new st.Parser(tokens);
 let root = parser.parse();
 
-console.log(st.dumpTree(root));
+if(process.stdout.isTTY){
+    console.log(st.prettyPrint(root, true));
+}
+else{
+    console.log(st.prettyPrint(root, false));
+}
+
 
 ///////////////////////////////////////
 //render the object tree

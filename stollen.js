@@ -27,9 +27,9 @@ var __read = (this && this.__read) || function (o, n) {
     return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dumpTree = exports.Item = exports.Parser = exports.Tokenizer = exports.Token = void 0;
+exports.prettyPrint = exports.Item = exports.Parser = exports.Tokenizer = exports.Token = void 0;
 var process = require("process");
-var colors = require('colors');
+var colors = require('colors/safe');
 var ESCAPE_CHAR = '@';
 var TokenPosition = /** @class */ (function () {
     function TokenPosition() {
@@ -459,44 +459,16 @@ var Parser = /** @class */ (function () {
     return Parser;
 }());
 exports.Parser = Parser;
-/*
-function dumpTree(item: Item, level = 0) {
-    const tab = 4;
-
-    let indent = ''
-    for (let i = 0; i < level * tab; i++) {
-        indent += ' ';
-    }
-
-    let toPrint = indent;
-
-    toPrint += colors.blue('{')
-    //for(const attr of object.attributes){
-    for (let i = 0, l = item.attributes.length; i < l; i++) {
-        const attr = item.attributes[i];
-        toPrint += colors.green(`${attr}`);
-        if (i < l - 1) {
-            toPrint += colors.green(', ')
-        }
-    }
-    toPrint += colors.blue('}[') + "`";
-
-    for (let child of item.body) {
-        if (typeof (child) === 'string') {
-            toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
-        }
-        else {
-            console.log(toPrint + "`");
-            toPrint = indent + "`";
-            dumpTree(child, level + 1);
-        }
-    }
-    console.log(toPrint + "`" + colors.blue(']'))
-}
-*/
-function dumpTree(item, level) {
+function prettyPrint(item, inColor, level) {
     var e_4, _a;
+    if (inColor === void 0) { inColor = true; }
     if (level === void 0) { level = 0; }
+    var inGreen = colors.green;
+    var inBlue = colors.blue;
+    if (!inColor) {
+        inGreen = function (str) { return str; };
+        inBlue = function (str) { return str; };
+    }
     var TAB = 4;
     var singleTab = '';
     for (var i = 0; i < TAB; i++) {
@@ -507,17 +479,17 @@ function dumpTree(item, level) {
         indent += singleTab;
     }
     var toPrint = '';
-    toPrint += indent + colors.blue('[ {');
+    toPrint += indent + inBlue('[ {');
     for (var i = 0, l = item.attributes.length; i < l; i++) {
         var attr = item.attributes[i];
-        toPrint += colors.green("\"".concat(attr.replace(/\"/g, '\\"'), "\""));
+        toPrint += inGreen("\"".concat(attr.replace(/\"/g, '\\"'), "\""));
         if (i < l - 1) {
             toPrint += ', ';
         }
     }
-    toPrint += colors.blue('}');
+    toPrint += inBlue('}');
     if (item.body.length === 1 && typeof item.body[0] === 'string') {
-        return toPrint += ' "' + item.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + colors.blue(']');
+        return toPrint += ' "' + item.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + inBlue(']');
     }
     else {
         toPrint += '\n';
@@ -528,7 +500,7 @@ function dumpTree(item, level) {
                     toPrint += indent + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
                 }
                 else {
-                    toPrint += dumpTree(child, level + 1) + '\n';
+                    toPrint += prettyPrint(child, inColor, level + 1) + '\n';
                 }
             }
         }
@@ -540,6 +512,6 @@ function dumpTree(item, level) {
             finally { if (e_4) throw e_4.error; }
         }
     }
-    return toPrint + indent + colors.blue(']');
+    return toPrint + indent + inBlue(']');
 }
-exports.dumpTree = dumpTree;
+exports.prettyPrint = prettyPrint;
