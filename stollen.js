@@ -219,7 +219,6 @@ var Parser = /** @class */ (function () {
     Parser.prototype.checkType = function (token, possibleTypes, exitOnError) {
         var e_3, _a;
         if (exitOnError === void 0) { exitOnError = true; }
-        console.log(token);
         if (typeof (possibleTypes) === 'string') {
             possibleTypes = [possibleTypes];
         }
@@ -312,13 +311,41 @@ var Parser = /** @class */ (function () {
                     process.exit(6969);
                 }
                 if (insideQuote) {
+                    switch (tokenNow.type) {
+                        case ESCAPE_CHAR:
+                            {
+                                if (nextToken.type === '"') {
+                                    attributeString += nextToken.type;
+                                    this.tkCursor++;
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            break;
+                        case 'text':
+                            {
+                                attributeString += tokenNow.text;
+                            }
+                            break;
+                        case '"':
+                            {
+                                itemNow.attributes.push(attributeString);
+                                attributeString = '';
+                                insideQuote = false;
+                            }
+                            break;
+                        default: {
+                            attributeString += tokenNow.type;
+                        }
+                    }
                 }
                 else {
                     switch (tokenNow.type) {
                         case ESCAPE_CHAR:
                             {
                                 if (nextToken.type === '}' || nextToken.type === '"') {
-                                    itemNow.appendTextToBody(nextToken.type);
+                                    attributeString += nextToken.type;
                                     this.tkCursor++;
                                 }
                                 else {
@@ -334,7 +361,7 @@ var Parser = /** @class */ (function () {
                                 else {
                                     this.checkSeriesOfType(this.tokens, this.tkCursor, ['text', '[']);
                                     if (!nextToken.isWhiteSpace()) {
-                                        console.log(colors.red("Error at ".concat(nextToken.docLocation(), " : ") +
+                                        console.error(colors.red("Error at ".concat(nextToken.docLocation(), " : ") +
                                             "there can be only whitespaces between } and ["));
                                         process.exit(6969);
                                     }
@@ -443,7 +470,7 @@ function dumpTree(item, level) {
             toPrint += colors.green(', ');
         }
     }
-    toPrint += colors.blue('}[') + '"';
+    toPrint += colors.blue('}[') + "`";
     try {
         for (var _b = __values(item.body), _c = _b.next(); !_c.done; _c = _b.next()) {
             var child = _c.value;
@@ -451,8 +478,8 @@ function dumpTree(item, level) {
                 toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
             }
             else {
-                console.log(toPrint + '"');
-                toPrint = indent + '"';
+                console.log(toPrint + "`");
+                toPrint = indent + "`";
                 dumpTree(child, level + 1);
             }
         }
@@ -464,6 +491,6 @@ function dumpTree(item, level) {
         }
         finally { if (e_4) throw e_4.error; }
     }
-    console.log(toPrint + '"' + colors.blue(']'));
+    console.log(toPrint + "`" + colors.blue(']'));
 }
 exports.dumpTree = dumpTree;

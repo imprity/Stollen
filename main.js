@@ -17,9 +17,9 @@ var srcPath = './test.st';
 var src = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 var tokenizer = new st.Tokenizer(src, srcPath);
 var tokens = tokenizer.tokenize();
-console.log('----------------');
-console.log(tokens);
-console.log('----------------');
+//console.log('----------------')
+//console.log(tokens);
+//console.log('----------------')
 var parser = new st.Parser(tokens);
 var root = parser.parse();
 st.dumpTree(root);
@@ -33,7 +33,7 @@ function render(root) {
     var e_1, _a;
     var rendered = "";
     if (root.isRoot()) {
-        rendered += "<p><pre>\n";
+        rendered += "<p>\n";
     }
     else {
         rendered += "<".concat(root.attributes[0], ">");
@@ -57,7 +57,7 @@ function render(root) {
         finally { if (e_1) throw e_1.error; }
     }
     if (root.isRoot()) {
-        rendered += "</pre></p>";
+        rendered += "\n</p>";
     }
     else {
         rendered += "</".concat(root.attributes[0], ">");

@@ -197,7 +197,6 @@ class Parser {
         token: Token,
         possibleTypes: TokenTypes[] | TokenTypes,
         exitOnError: boolean = true): string | null {
-            console.log(token);
         if (typeof (possibleTypes) === 'string') {
             possibleTypes = [possibleTypes];
         }
@@ -306,12 +305,32 @@ class Parser {
                 }
 
                 if (insideQuote) {
-
+                    switch(tokenNow.type){
+                        case ESCAPE_CHAR:{
+                            if (nextToken.type === '"') { 
+                                attributeString += nextToken.type;
+                                this.tkCursor++;
+                            } else {
+                                continue;
+                            }
+                        }break;
+                        case 'text':{
+                            attributeString += tokenNow.text;
+                        }break;
+                        case '"':{
+                            itemNow.attributes.push(attributeString);
+                            attributeString = '';
+                            insideQuote = false;
+                        }break;
+                        default:{
+                            attributeString += tokenNow.type;
+                        }
+                    }
                 } else {
                     switch (tokenNow.type) {
                         case ESCAPE_CHAR: {
                             if (nextToken.type === '}' || nextToken.type === '"') { 
-                                itemNow.appendTextToBody(nextToken.type);
+                                attributeString += nextToken.type;
                                 this.tkCursor++;
                             } else {
                                 continue;
@@ -323,7 +342,7 @@ class Parser {
                             } else {
                                 this.checkSeriesOfType(this.tokens, this.tkCursor, ['text', '['])
                                 if (!nextToken.isWhiteSpace()) {
-                                    console.log(colors.red(
+                                    console.error(colors.red(
                                         `Error at ${nextToken.docLocation()} : `+
                                         `there can be only whitespaces between } and [`
                                     ));
@@ -421,19 +440,19 @@ function dumpTree(item: Item, level = 0) {
             toPrint += colors.green(', ')
         }
     }
-    toPrint += colors.blue('}[') + '"';
+    toPrint += colors.blue('}[') + "`";
 
     for (let child of item.body) {
         if (typeof (child) === 'string') {
             toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
         }
         else {
-            console.log(toPrint + '"');
-            toPrint = indent + '"';
+            console.log(toPrint + "`");
+            toPrint = indent + "`";
             dumpTree(child, level + 1);
         }
     }
-    console.log(toPrint + '"' + colors.blue(']'))
+    console.log(toPrint + "`" + colors.blue(']'))
 }
 
 export { Token, TokenTypes, Tokenizer, Parser, Item, dumpTree }

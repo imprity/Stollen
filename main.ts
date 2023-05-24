@@ -7,9 +7,9 @@ const src: string = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 let tokenizer = new st.Tokenizer(src, srcPath);
 let tokens = tokenizer.tokenize();
 
-console.log('----------------')
-console.log(tokens);
-console.log('----------------')
+//console.log('----------------')
+//console.log(tokens);
+//console.log('----------------')
 
 let parser = new st.Parser(tokens);
 let root = parser.parse();
@@ -26,7 +26,7 @@ st.dumpTree(root);
 function render(root : st.Item) : string{
     let rendered = ""
     if(root.isRoot()){
-        rendered += "<p><pre>\n"
+        rendered += "<p>\n"
     }
     else{
         rendered += `<${root.attributes[0]}>`
@@ -42,7 +42,7 @@ function render(root : st.Item) : string{
     }
     
     if(root.isRoot()){
-        rendered += "</pre></p>"
+        rendered += "\n</p>"
     }
     else{
         rendered += `</${root.attributes[0]}>`
