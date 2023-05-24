@@ -14,7 +14,7 @@ let tokens = tokenizer.tokenize();
 let parser = new st.Parser(tokens);
 let root = parser.parse();
 
-st.dumpTree(root);
+console.log(st.dumpTree(root));
 
 ///////////////////////////////////////
 //render the object tree

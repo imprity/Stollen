@@ -22,7 +22,7 @@ var tokens = tokenizer.tokenize();
 //console.log('----------------')
 var parser = new st.Parser(tokens);
 var root = parser.parse();
-st.dumpTree(root);
+console.log(st.dumpTree(root));
 ///////////////////////////////////////
 //render the object tree
 ///////////////////////////////////////

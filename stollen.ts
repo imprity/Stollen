@@ -2,19 +2,19 @@ import * as process from 'process'
 const colors = require('colors');
 
 const ESCAPE_CHAR = '@'
-type TokenTypes = '!{' | '}' | '[' | '!]' | '"' | typeof ESCAPE_CHAR  | 'text' | 'unknown';
+type TokenTypes = '!{' | '}' | '[' | '!]' | '"' | typeof ESCAPE_CHAR | 'text' | 'unknown';
 
-class TokenPosition{
+class TokenPosition {
     srcPath: string
     column: number = 0;
     lineNumber: number = 0;
-    cursor : number = 0;
+    cursor: number = 0;
 
     docLocation(): string {
         return `"${this.srcPath}:${this.lineNumber + 1}:${this.column + 1}"`
     }
 
-    copy() : TokenPosition{
+    copy(): TokenPosition {
         let copy = new TokenPosition();
         copy.srcPath = this.srcPath;
         copy.column = this.column;
@@ -28,7 +28,7 @@ class Token {
     static readonly LITERAL_TOKENS: TokenTypes[] = ['!{', '}', '[', '!]', '"', '@'];
     type: TokenTypes = 'unknown';
     text: string = '';
-    pos : TokenPosition;
+    pos: TokenPosition;
 
     docLocation(): string {
         return this.pos.docLocation();
@@ -61,12 +61,12 @@ class Tokenizer {
         this.srcLength = this.src.length;
     }
 
-    startsWith(text: string, pos : TokenPosition): boolean {
+    startsWith(text: string, pos: TokenPosition): boolean {
         return this.src.startsWith(text, pos.cursor);
     }
 
-    advance(textLength: number, pos : TokenPosition): [string, TokenPosition,  boolean] {
-        let newTokenPos : TokenPosition = pos.copy();
+    advance(textLength: number, pos: TokenPosition): [string, TokenPosition, boolean] {
+        let newTokenPos: TokenPosition = pos.copy();
 
         if (pos.cursor >= this.srcLength) {
             return ["", newTokenPos, true];
@@ -85,7 +85,7 @@ class Tokenizer {
         return [text, newTokenPos, newTokenPos.cursor >= this.srcLength]
     }
 
-    createToken(type: TokenTypes, pos : TokenPosition) {
+    createToken(type: TokenTypes, pos: TokenPosition) {
         let token = new Token();
         token.pos = pos.copy();
         token.type = type;
@@ -93,7 +93,7 @@ class Tokenizer {
         return token;
     }
 
-    pushText(text: string, pos : TokenPosition) {
+    pushText(text: string, pos: TokenPosition) {
         if (this.tokens.length == 0 || this.tokens[this.tokens.length - 1].type !== 'text') {
             let token = this.createToken('text', pos);
             token.text = text;
@@ -135,18 +135,27 @@ class Tokenizer {
                     //because we already know what is infront of cursor ahead of time
                     currentPos.cursor += t.length;
                     currentPos.column += t.length;
-                    
+
                     foundLiteralToken = true;
                 }
             }
-            if(foundLiteralToken){
+            if (foundLiteralToken) {
                 continue;
             }
 
             //everything else we will just treat them as texts
             let text = '';
-            let newPos : TokenPosition;
-            [text,newPos, reachedEnd] = this.advance(1, currentPos);
+            let newPos: TokenPosition;
+            [text, newPos, reachedEnd] = this.advance(1, currentPos);
+
+
+            //this is here to prevent empty text being pushed in to the body
+            //while that is relatively harmless but it does get in the way 
+            //when we are trying to dump the tree
+            if (reachedEnd && text.length <= 0) {
+                continue;
+            }
+
             this.pushText(text, currentPos);
             currentPos = newPos;
         }
@@ -273,7 +282,7 @@ class Parser {
     errorSuddenEnd(): string {
         return colors.red('Error : source unexpectedly ended')
     }
-    errorUnknowType(token : Token): string {
+    errorUnknowType(token: Token): string {
         return colors.red(`Error at ${token.docLocation()} : weird token...`);
     }
 
@@ -285,57 +294,57 @@ class Parser {
 
         let insideAttributes = false;
         let insideQuote = false;
-        let attributeString : string = '';
+        let attributeString: string = '';
 
         while (this.tkCursor < this.tokens.length) {
             let itemNow = this.items[this.items.length - 1];
             let tokenNow = this.tokens[this.tkCursor++];
 
-            let nextToken : null | Token = this.tkCursor >= this.tokens.length ? null : this.tokens[this.tkCursor];
+            let nextToken: null | Token = this.tkCursor >= this.tokens.length ? null : this.tokens[this.tkCursor];
 
-            if(tokenNow.type === 'unknown'){
+            if (tokenNow.type === 'unknown') {
                 console.error(this.errorUnknowType(tokenNow));
                 process.exit(6969)
             }
 
             if (insideAttributes) {
-                if(nextToken === null){
+                if (nextToken === null) {
                     console.error(this.errorSuddenEnd());
                     process.exit(6969);
                 }
 
                 if (insideQuote) {
-                    switch(tokenNow.type){
-                        case ESCAPE_CHAR:{
-                            if (nextToken.type === '"') { 
+                    switch (tokenNow.type) {
+                        case ESCAPE_CHAR: {
+                            if (nextToken.type === '"') {
                                 attributeString += nextToken.type;
                                 this.tkCursor++;
                             } else {
                                 continue;
                             }
-                        }break;
-                        case 'text':{
+                        } break;
+                        case 'text': {
                             attributeString += tokenNow.text;
-                        }break;
-                        case '"':{
+                        } break;
+                        case '"': {
                             itemNow.attributes.push(attributeString);
                             attributeString = '';
                             insideQuote = false;
-                        }break;
-                        default:{
+                        } break;
+                        default: {
                             attributeString += tokenNow.type;
                         }
                     }
                 } else {
                     switch (tokenNow.type) {
                         case ESCAPE_CHAR: {
-                            if (nextToken.type === '}' || nextToken.type === '"') { 
+                            if (nextToken.type === '}' || nextToken.type === '"') {
                                 attributeString += nextToken.type;
                                 this.tkCursor++;
                             } else {
                                 continue;
                             }
-                        }break;
+                        } break;
                         case '}': {
                             if (nextToken.type === '[') {
                                 this.tkCursor++;
@@ -343,30 +352,30 @@ class Parser {
                                 this.checkSeriesOfType(this.tokens, this.tkCursor, ['text', '['])
                                 if (!nextToken.isWhiteSpace()) {
                                     console.error(colors.red(
-                                        `Error at ${nextToken.docLocation()} : `+
+                                        `Error at ${nextToken.docLocation()} : ` +
                                         `there can be only whitespaces between } and [`
                                     ));
                                     process.exit(6969);
                                 }
-                                this.tkCursor+=2;
+                                this.tkCursor += 2;
                             }
 
                             insideAttributes = false;
 
                             itemNow.attributes = itemNow.attributes.concat(stringToWords(attributeString))
                             attributeString = '';
-                        }break;
-                        case 'text' : {
+                        } break;
+                        case 'text': {
                             attributeString += tokenNow.text;
-                        }break;
-                        case '"' : {
+                        } break;
+                        case '"': {
                             itemNow.attributes = itemNow.attributes.concat(stringToWords(attributeString))
                             attributeString = '';
                             insideQuote = true;
-                        }break;
-                        default :{
+                        } break;
+                        default: {
                             attributeString += tokenNow.type;
-                        }break;
+                        } break;
                     }
                 }
             }
@@ -392,7 +401,7 @@ class Parser {
                         //we are now inside items attributes
                         insideAttributes = true;
 
-                        if(nextToken === null){
+                        if (nextToken === null) {
                             console.error(this.errorSuddenEnd());
                             process.exit(6969);
                         }
@@ -424,35 +433,53 @@ class Parser {
     }
 }
 
-function dumpTree(item: Item, level = 0) {
-    let indent = ''
-    for (let i = 0; i < level * 4; i++) {
-        indent += ' ';
-    }
-    let toPrint = indent;
+function dumpTree(item: Item, level = 0): string {
+    const TAB = 4;
 
-    toPrint += colors.blue('{')
-    //for(const attr of object.attributes){
+    let singleTab = '';
+
+    for (let i = 0; i < TAB; i++) {
+        singleTab += ' ';
+    }
+
+    let indent = '';
+
+    for (let i = 0; i < level; i++) {
+        indent += singleTab;
+    }
+
+    let toPrint = ''
+
+    toPrint += indent + colors.blue('[ {')
+
     for (let i = 0, l = item.attributes.length; i < l; i++) {
         const attr = item.attributes[i];
-        toPrint += colors.green(`${attr}`);
+        toPrint += colors.green(`"${attr.replace(/\"/g, '\\"')}"`);
         if (i < l - 1) {
-            toPrint += colors.green(', ')
+            toPrint += ', '
         }
     }
-    toPrint += colors.blue('}[') + "`";
 
-    for (let child of item.body) {
-        if (typeof (child) === 'string') {
-            toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
-        }
-        else {
-            console.log(toPrint + "`");
-            toPrint = indent + "`";
-            dumpTree(child, level + 1);
+    toPrint += colors.blue('}');
+
+    if (item.body.length === 1 && typeof item.body[0] === 'string') {
+        return toPrint += ' "' + item.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + colors.blue(']');
+    }
+    else {
+        toPrint += '\n'
+
+        for (const child of item.body) {
+            if (typeof child === 'string') {
+                toPrint += indent  + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
+            }
+            else {
+                toPrint += dumpTree(child, level + 1) + '\n';
+            }
         }
     }
-    console.log(toPrint + "`" + colors.blue(']'))
+
+
+    return toPrint + indent + colors.blue(']');
 }
 
 export { Token, TokenTypes, Tokenizer, Parser, Item, dumpTree }

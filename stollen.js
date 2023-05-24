@@ -161,6 +161,12 @@ var Tokenizer = /** @class */ (function () {
             var text = '';
             var newPos = void 0;
             _b = __read(this.advance(1, currentPos), 3), text = _b[0], newPos = _b[1], reachedEnd = _b[2];
+            //this is here to prevent empty text being pushed in to the body
+            //while that is relatively harmless but it does get in the way 
+            //when we are trying to dump the tree
+            if (reachedEnd && text.length <= 0) {
+                continue;
+            }
             this.pushText(text, currentPos);
             currentPos = newPos;
         }
@@ -453,44 +459,87 @@ var Parser = /** @class */ (function () {
     return Parser;
 }());
 exports.Parser = Parser;
-function dumpTree(item, level) {
-    var e_4, _a;
-    if (level === void 0) { level = 0; }
-    var indent = '';
-    for (var i = 0; i < level * 4; i++) {
+/*
+function dumpTree(item: Item, level = 0) {
+    const tab = 4;
+
+    let indent = ''
+    for (let i = 0; i < level * tab; i++) {
         indent += ' ';
     }
-    var toPrint = indent;
-    toPrint += colors.blue('{');
+
+    let toPrint = indent;
+
+    toPrint += colors.blue('{')
     //for(const attr of object.attributes){
-    for (var i = 0, l = item.attributes.length; i < l; i++) {
-        var attr = item.attributes[i];
-        toPrint += colors.green("".concat(attr));
+    for (let i = 0, l = item.attributes.length; i < l; i++) {
+        const attr = item.attributes[i];
+        toPrint += colors.green(`${attr}`);
         if (i < l - 1) {
-            toPrint += colors.green(', ');
+            toPrint += colors.green(', ')
         }
     }
     toPrint += colors.blue('}[') + "`";
-    try {
-        for (var _b = __values(item.body), _c = _b.next(); !_c.done; _c = _b.next()) {
-            var child = _c.value;
-            if (typeof (child) === 'string') {
-                toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
-            }
-            else {
-                console.log(toPrint + "`");
-                toPrint = indent + "`";
-                dumpTree(child, level + 1);
-            }
+
+    for (let child of item.body) {
+        if (typeof (child) === 'string') {
+            toPrint += child.replace(/\r\n/g, ' \\r\\n ').replace(/\n/g, ' \\n ');
+        }
+        else {
+            console.log(toPrint + "`");
+            toPrint = indent + "`";
+            dumpTree(child, level + 1);
         }
     }
-    catch (e_4_1) { e_4 = { error: e_4_1 }; }
-    finally {
+    console.log(toPrint + "`" + colors.blue(']'))
+}
+*/
+function dumpTree(item, level) {
+    var e_4, _a;
+    if (level === void 0) { level = 0; }
+    var TAB = 4;
+    var singleTab = '';
+    for (var i = 0; i < TAB; i++) {
+        singleTab += ' ';
+    }
+    var indent = '';
+    for (var i = 0; i < level; i++) {
+        indent += singleTab;
+    }
+    var toPrint = '';
+    toPrint += indent + colors.blue('[ {');
+    for (var i = 0, l = item.attributes.length; i < l; i++) {
+        var attr = item.attributes[i];
+        toPrint += colors.green("\"".concat(attr.replace(/\"/g, '\\"'), "\""));
+        if (i < l - 1) {
+            toPrint += ', ';
+        }
+    }
+    toPrint += colors.blue('}');
+    if (item.body.length === 1 && typeof item.body[0] === 'string') {
+        return toPrint += ' "' + item.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + colors.blue(']');
+    }
+    else {
+        toPrint += '\n';
         try {
-            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            for (var _b = __values(item.body), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var child = _c.value;
+                if (typeof child === 'string') {
+                    toPrint += indent + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
+                }
+                else {
+                    toPrint += dumpTree(child, level + 1) + '\n';
+                }
+            }
         }
-        finally { if (e_4) throw e_4.error; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_4) throw e_4.error; }
+        }
     }
-    console.log(toPrint + "`" + colors.blue(']'));
+    return toPrint + indent + colors.blue(']');
 }
 exports.dumpTree = dumpTree;
