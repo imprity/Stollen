@@ -17,9 +17,6 @@ var srcPath = './test.st';
 var src = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 var tokenizer = new st.Tokenizer(src, srcPath);
 var tokens = tokenizer.tokenize();
-//console.log('----------------')
-//console.log(tokens);
-//console.log('----------------')
 var parser = new st.Parser(tokens);
 var root = parser.parse();
 if (process.stdout.isTTY) {
@@ -28,6 +25,8 @@ if (process.stdout.isTTY) {
 else {
     console.log(st.prettyPrint(root, false));
 }
+console.log('------------------');
+console.log(st.dumpTree(root));
 ///////////////////////////////////////
 //render the object tree
 ///////////////////////////////////////

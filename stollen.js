@@ -27,7 +27,7 @@ var __read = (this && this.__read) || function (o, n) {
     return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.prettyPrint = exports.Item = exports.Parser = exports.Tokenizer = exports.Token = void 0;
+exports.dumpTree = exports.prettyPrint = exports.Item = exports.Parser = exports.Tokenizer = exports.Token = void 0;
 var process = require("process");
 var colors = require('colors/safe');
 var ESCAPE_CHAR = '@';
@@ -515,3 +515,42 @@ function prettyPrint(item, inColor, level) {
     return toPrint + indent + inBlue(']');
 }
 exports.prettyPrint = prettyPrint;
+function dumpTree(item) {
+    var e_5, _a, e_6, _b;
+    var text = "!{";
+    try {
+        for (var _c = __values(item.attributes), _d = _c.next(); !_d.done; _d = _c.next()) {
+            var attr = _d.value;
+            text += " ".concat(attr);
+        }
+    }
+    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+    finally {
+        try {
+            if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+        }
+        finally { if (e_5) throw e_5.error; }
+    }
+    text += ' }[';
+    try {
+        for (var _e = __values(item.body), _f = _e.next(); !_f.done; _f = _e.next()) {
+            var child = _f.value;
+            if (typeof child === 'string') {
+                text += child;
+            }
+            else {
+                text += dumpTree(child);
+            }
+        }
+    }
+    catch (e_6_1) { e_6 = { error: e_6_1 }; }
+    finally {
+        try {
+            if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+        }
+        finally { if (e_6) throw e_6.error; }
+    }
+    text += '!]';
+    return text;
+}
+exports.dumpTree = dumpTree;

@@ -7,10 +7,6 @@ const src: string = fs.readFileSync(srcPath, { encoding: 'utf-8' });
 let tokenizer = new st.Tokenizer(src, srcPath);
 let tokens = tokenizer.tokenize();
 
-//console.log('----------------')
-//console.log(tokens);
-//console.log('----------------')
-
 let parser = new st.Parser(tokens);
 let root = parser.parse();
 
@@ -20,6 +16,8 @@ if(process.stdout.isTTY){
 else{
     console.log(st.prettyPrint(root, false));
 }
+console.log('------------------')
+console.log(st.dumpTree(root))
 
 
 ///////////////////////////////////////

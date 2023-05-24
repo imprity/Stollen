@@ -489,4 +489,23 @@ function prettyPrint(item: Item, inColor : boolean = true , level = 0): string {
     return toPrint + indent + inBlue(']');
 }
 
-export { Token, TokenTypes, Tokenizer, Parser, Item, prettyPrint}
+function dumpTree(item : Item) : string{
+    let text = "!{";
+    for(const attr of item.attributes){
+        text += ` ${attr}`
+    }
+    text += ' }['
+    for (const child of item.body) {
+        if (typeof child === 'string') {
+            text += child;
+        }
+        else {
+            text += dumpTree(child);
+        }
+    }
+    text += '!]';
+
+    return text;
+}
+
+export { Token, TokenTypes, Tokenizer, Parser, Item, prettyPrint, dumpTree}
