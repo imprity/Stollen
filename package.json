@@ -4,7 +4,8 @@
   "description": "It's like pollen but worse",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./test/test.js",
+    "update-test": "node ./test/test.js -u"
   },
   "author": "",
   "license": "ISC",
