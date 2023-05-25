@@ -26,6 +26,8 @@ while (true) {
     files.push(file);
 }
 
+dir.closeSync();
+
 let testCases: Map<string, string> = new Map<string, string>();
 
 for (const file of files) {
