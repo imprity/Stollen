@@ -62,7 +62,7 @@ for (const file of files) {
         let filePath = path.join(__dirname, file.name);
         let content = fs.readFileSync(filePath, 'utf-8' );
 
-        testCases.set(file.name, content.replace(/\r\n/, '\n'));
+        testCases.set(file.name, content.replace(/\r\n/g, '\n'));
     }
 }
 
