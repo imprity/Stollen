@@ -191,6 +191,8 @@ function stringToWords(str: string): Array<string> {
     return arr;
 }
 
+type TokenTypeOrWhiteSpace = TokenTypes | "whitespace"
+
 class Parser {
     tkCursor = 0;
     root = new Item();
@@ -214,14 +216,17 @@ class Parser {
 
     checkType(
         token: Token,
-        possibleTypes: TokenTypes[] | TokenTypes,
+        possibleTypes: TokenTypeOrWhiteSpace[] | TokenTypeOrWhiteSpace,
         ): string | null {
         if (typeof (possibleTypes) === 'string') {
             possibleTypes = [possibleTypes];
         }
 
         for (const type of possibleTypes) {
-            if (token.type === type) {
+            if(type === 'whitespace' && token.isWhiteSpace()){
+                return null;
+            }
+            else if (token.type === type) {
                 return null;
             }
         }
@@ -233,7 +238,7 @@ class Parser {
     checkSeriesOfType(
         tokens: Token[],
         start: number,
-        typeArr: (TokenTypes[] | TokenTypes)[]): string | null {
+        typeArr: (TokenTypeOrWhiteSpace[] | TokenTypeOrWhiteSpace)[]): string | null {
 
         let expectedLength = typeArr.length;
 
@@ -261,8 +266,8 @@ class Parser {
     errorUnexpectedType(token: Token): string {
         return this.inRed(`Error at ${token.docLocation()} : unexpected ${token.type}`);
     }
-    errorWrongType(token: Token, expectedTypes: TokenTypes | TokenTypes[]): string {
-        let errorMsg = `Error at ${token.docLocation()} : expecting `
+    errorWrongType(token: Token, expectedTypes: TokenTypeOrWhiteSpace | TokenTypeOrWhiteSpace[]): string {
+        let errorMsg = `Error at ${token.docLocation()} : expected `
 
         if (typeof expectedTypes === 'string') {
             expectedTypes = [expectedTypes];
@@ -349,12 +354,9 @@ class Parser {
                             if (nextToken.type === '[') {
                                 this.tkCursor++;
                             } else {
-                                this.checkSeriesOfType(this.tokens, this.tkCursor, ['text', '['])
-                                if (!nextToken.isWhiteSpace()) {
-                                    return [this.root, this.inRed(
-                                        `Error at ${nextToken.docLocation()} : ` +
-                                        `there can be only whitespaces between } and [`
-                                    )]
+                                let errorMsg = this.checkSeriesOfType(this.tokens, this.tkCursor, ['whitespace', '['])
+                                if (errorMsg) {
+                                    return [this.root, errorMsg]
                                 }
                                 this.tkCursor += 2;
                             }
