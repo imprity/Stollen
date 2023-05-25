@@ -11,6 +11,7 @@ if (args.findIndex((str) => {return str === '-h' }) >= 0) {
     console.log('')
     console.log('-u : update the test cases')
     console.log('-h : prints this message')
+    console.log('-d : delete failed case files')
     process.exit(0);
 }
 
@@ -27,6 +28,32 @@ while (true) {
 }
 
 dir.closeSync();
+
+if (args.findIndex((str) => { return str === '-d' }) >= 0) {
+    console.log('deleting failed test cases')
+    let deletedFiles = [];
+
+    for (const file of files) {
+        if (file.isFile() && file.name.endsWith('.st.fail')) {
+            let fullPath = path.join(__dirname, file.name);
+            try{
+                fs.unlinkSync(fullPath);
+            }catch(err){
+                console.error(`Error : failed to delete the file ${fullPath}`);
+                console.error(err);
+            }finally{
+                deletedFiles.push(fullPath);
+            }
+        }
+    }
+    
+    console.log(`deleted ${deletedFiles.length} files`)
+    for(const file of deletedFiles){
+        console.log(file);
+    }
+
+    process.exit(0);
+}
 
 let testCases: Map<string, string> = new Map<string, string>();
 
