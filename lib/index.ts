@@ -223,7 +223,7 @@ class Parser {
         }
 
         for (const type of possibleTypes) {
-            if(type === 'whitespace' && token.isWhiteSpace()){
+            if(type === 'whitespace' && token.type === 'text' && token.isWhiteSpace()){
                 return null;
             }
             else if (token.type === type) {
