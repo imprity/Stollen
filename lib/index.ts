@@ -1,7 +1,7 @@
 import * as colors from 'colors/safe'
 
 const ESCAPE_CHAR = '@'
-type TokenTypes = '!{' | '}' | '[' | '!]' | '"' | typeof ESCAPE_CHAR | 'text' | 'unknown';
+type TokenTypes = '{!' | '}' | '[' | '!]' | '"' | typeof ESCAPE_CHAR | 'text' | 'unknown';
 
 class TokenPosition {
     srcPath: string
@@ -24,7 +24,7 @@ class TokenPosition {
 }
 
 class Token {
-    static readonly LITERAL_TOKENS: TokenTypes[] = ['!{', '}', '[', '!]', '"', '@'];
+    static readonly LITERAL_TOKENS: TokenTypes[] = ['{!', '}', '[', '!]', '"', '@'];
     type: TokenTypes = 'unknown';
     text: string = '';
     pos: TokenPosition;
@@ -383,14 +383,14 @@ class Parser {
             else {
                 switch (tokenNow.type) {
                     case ESCAPE_CHAR: {
-                        if (nextToken.type === '!{' || nextToken.type === '!]') {
+                        if (nextToken.type === '{!' || nextToken.type === '!]') {
                             itemNow.appendTextToBody(nextToken.type);
                             this.tkCursor++;
                         } else {
                             continue;
                         }
                     } break;
-                    case '!{': {
+                    case '{!': {
                         //add new item
                         let newItem = new Item();
                         this.items.push(newItem);
@@ -489,7 +489,7 @@ function prettyPrint(item: Item, inColor : boolean = true , level = 0): string {
 }
 
 function dumpTree(item : Item) : string{
-    let text = "!{";
+    let text = "{!";
     for(const attr of item.attributes){
         text += ` ${attr}`
     }

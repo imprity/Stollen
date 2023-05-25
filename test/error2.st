@@ -1,1 +1,1 @@
-!{attribute string suddenly ends without @}
+{!attribute string suddenly ends without @}
