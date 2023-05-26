@@ -4,8 +4,8 @@
         "sourceMap": true,
     },
     "files": [
+        "bread.ts",
         "index.ts",
-        "main.ts",
         "./lib/index.ts",
         "./test/test.ts"
     ],
