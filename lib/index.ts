@@ -196,7 +196,6 @@ type TokenTypeOrWhiteSpace = TokenTypes | "whitespace"
 class Parser {
     tkCursor = 0;
     root = new Item();
-    items: Array<Item> = [this.root];
     tokens: Token[];
 
     constructor(tokens: Token[]) {
@@ -290,21 +289,26 @@ class Parser {
     errorUnknowType(token: Token): string {
         return this.inRed(`Error at ${token.docLocation()} : weird token...`);
     }
+    errorUnclosedBody(openendAt : Token) :string{
+        return this.inRed(`Error : unclosed [ at ${openendAt.docLocation()}`);
+    }
 
     parse(errorInColor : boolean): [Item , string | null] {
-
-        this.printInColor = errorInColor;
-
         if (this.tokens.length <= 0) {
             return [this.root, null];
         }
+
+        this.printInColor = errorInColor;
+
+        const items: Array<Item> = [this.root];
+        const openBodyStack : Token[] = []; //for matching [
 
         let insideAttributes = false;
         let insideQuote = false;
         let attributeString: string = '';
 
         while (this.tkCursor < this.tokens.length) {
-            let itemNow = this.items[this.items.length - 1];
+            let itemNow = items[items.length - 1];
             let tokenNow = this.tokens[this.tkCursor++];
 
             let nextToken: null | Token = this.tkCursor >= this.tokens.length ? null : this.tokens[this.tkCursor];
@@ -352,12 +356,14 @@ class Parser {
                         } break;
                         case '}': {
                             if (nextToken.type === '[') {
+                                openBodyStack.push(nextToken);
                                 this.tkCursor++;
                             } else {
                                 let errorMsg = this.checkSeriesOfType(this.tokens, this.tkCursor, ['whitespace', '['])
                                 if (errorMsg) {
                                     return [this.root, errorMsg]
                                 }
+                                openBodyStack.push(this.tokens[this.tkCursor + 1]);
                                 this.tkCursor += 2;
                             }
 
@@ -393,7 +399,7 @@ class Parser {
                     case '{!': {
                         //add new item
                         let newItem = new Item();
-                        this.items.push(newItem);
+                        items.push(newItem);
 
                         //and add them to current item's body
                         newItem.parent = itemNow;
@@ -411,10 +417,11 @@ class Parser {
 
                         //prevent popping root from item stack
                         //this happens when src text has mismatching '[' and '!]'
-                        if (this.items.length <= 1) {
+                        if (items.length <= 1) {
                             return [this.root, this.errorUnexpectedType(tokenNow)]
                         }
-                        this.items.pop();
+                        items.pop();
+                        openBodyStack.pop();
                     } break;
                     case 'text': {
                         itemNow.appendTextToBody(tokenNow.text);
@@ -426,6 +433,10 @@ class Parser {
                     } break;
                 }
             }
+        }
+
+        if(openBodyStack.length > 0){
+            return [this.root, this.errorUnclosedBody(openBodyStack[openBodyStack.length -1])]
         }
 
         return [this.root, null];
