@@ -149,8 +149,7 @@ class Tokenizer {
 
 
             //this is here to prevent empty text being pushed in to the body
-            //while that is relatively harmless but it does get in the way 
-            //when we are trying to dump the tree
+            //while that is relatively harmless but it can be annoying
             if (reachedEnd && text.length <= 0) {
                 continue;
             }
@@ -440,6 +439,7 @@ class Parser {
         }
 
         this.removeNewLineAtBeginningAndEndOfBody(this.root);
+        this.removeEmptyStringFromBody(this.root);
 
         return [this.root, null];
     }
@@ -477,6 +477,21 @@ class Parser {
         for(const child of root.body){
             if(typeof child === 'object'){
                 this.removeNewLineAtBeginningAndEndOfBody(child)
+            }
+        }
+    }
+
+    removeEmptyStringFromBody(item : Item){
+        item.body = item.body.filter((child)=>{
+            if(typeof child === "string" && child.length === 0){
+                return false;
+            }
+            return true;
+        })
+
+        for(const child of item.body){
+            if(typeof child !== 'string'){
+                this.removeEmptyStringFromBody(child);
             }
         }
     }
