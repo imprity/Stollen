@@ -491,7 +491,7 @@ function prettyPrint(item: Item, inColor : boolean = true , level = 0): string {
 function dumpTree(item : Item) : string{
     let text = "{!";
     for(const attr of item.attributes){
-        text += ` ${attr}`
+        text += ` "${attr.replace(/"/g, '\\"')}"`
     }
     text += ' }['
     for (const child of item.body) {

@@ -1,7 +1,7 @@
 OUTPUT
 {! }[@
 
-{! {! } @ [ !] {!this is}[ "a single attribute !" ] }[
+{! "{!" "}" "@" "[" "!]" "{!this is}[ \"a single attribute !\" ]" }[
     }[ ] " " !]
 !]
 
