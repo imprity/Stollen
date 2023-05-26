@@ -439,7 +439,46 @@ class Parser {
             return [this.root, this.errorUnclosedBody(openBodyStack[openBodyStack.length -1])]
         }
 
+        this.removeNewLineAtBeginningAndEndOfBody(this.root);
+
         return [this.root, null];
+    }
+
+    removeNewLineAtBeginningAndEndOfBody(root : Item){
+        //we will remove the new line at the 
+        //[       ]
+        // ^ and ^
+
+        if(root.body.length <= 0){
+            return;
+        }
+
+        let first :()=>any = ()=>root.body[0];
+        let last  :()=>any = ()=>root.body[root.body.length - 1];
+
+        //remove new line at the start
+        if(typeof first() === 'string'){
+            if(first().startsWith('\r\n')){
+                root.body[0] = first().slice(2)
+            }else if(first().startsWith('\n')){
+                root.body[0] = first().slice(1)
+            }
+        }
+        //remove new line at the end
+        if(typeof last() === 'string'){
+            if(last().endsWith('\r\n')){
+                root.body[root.body.length - 1] = last().slice(0, -2)
+            }else if(last().endsWith('\n')){
+                root.body[root.body.length - 1] = last().slice(0, -1)
+            }
+        }
+
+        //recurse down to children in the body
+        for(const child of root.body){
+            if(typeof child === 'object'){
+                this.removeNewLineAtBeginningAndEndOfBody(child)
+            }
+        }
     }
 }
 
