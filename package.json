@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "node ./test/test.js",
-    "update-test": "node ./test/test.js -u"
+    "update-test": "node ./test/test.js -u"    
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^20.2.1"
+    "@types/node": "^20.2.1",
+    "typescript" : "^5.0.4"
   },
   "dependencies": {
     "colors": "^1.4.0"
