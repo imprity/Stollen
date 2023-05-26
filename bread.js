@@ -44,12 +44,12 @@ try {
             var content = fs.readFileSync(filePath, 'utf-8');
             var tokenizer = new st.Tokenizer(content, filePath);
             var parser = new st.Parser(tokenizer.tokenize());
-            var _b = __read(parser.parse(process.stdout.isTTY), 2), root = _b[0], errorMsg = _b[1];
+            var _b = __read(parser.parse(Boolean(process.stdout.isTTY)), 2), root = _b[0], errorMsg = _b[1];
             if (errorMsg) {
                 console.error(errorMsg);
             }
             else {
-                console.log(st.prettyPrint(root, process.stdout.isTTY));
+                console.log(st.prettyPrint(root, Boolean(process.stdout.isTTY)));
             }
         }
         catch (err) {

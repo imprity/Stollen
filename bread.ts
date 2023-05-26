@@ -15,13 +15,13 @@ for(const filePath of args){
         let content = fs.readFileSync(filePath, 'utf-8');
         let tokenizer = new st.Tokenizer(content, filePath);
         let parser = new st.Parser(tokenizer.tokenize());
-        let [root, errorMsg] = parser.parse(process.stdout.isTTY);
+        let [root, errorMsg] = parser.parse(Boolean(process.stdout.isTTY));
 
         if(errorMsg){
             console.error(errorMsg);
         }
         else{
-            console.log(st.prettyPrint(root, process.stdout.isTTY));
+            console.log(st.prettyPrint(root, Boolean(process.stdout.isTTY)));
         }
     }
     catch(err){
