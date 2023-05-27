@@ -42,6 +42,7 @@ function renderHtml(item: st.Item): string {
         render +=
         `<html>${EOL}`+
         `<head>${EOL}`+
+        `<style> pre  {white-space : pre-wrap}</style>${EOL}`+
         `</head>${EOL}`+
         `<body>`;
         for (const child of item.body) {
@@ -49,8 +50,11 @@ function renderHtml(item: st.Item): string {
                 if(!opened){
                     render+= '<pre>'
                     opened = true;
+                    render += `${child.trimStart()}`
                 }
-                render += `${child.trimStart().trimEnd()}`;
+                else{
+                    render += `${child}`
+                }
             }
             else {
                 if (child.attributes.length <= 0) {
@@ -64,6 +68,7 @@ function renderHtml(item: st.Item): string {
                     }
                     else {
                         if(opened){
+                            render = render.trimEnd()
                             render+= '</pre>'
                             opened = false;
                         }

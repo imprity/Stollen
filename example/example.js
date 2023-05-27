@@ -75,6 +75,7 @@ function renderHtml(item) {
         render +=
             "<html>".concat(os_1.EOL) +
                 "<head>".concat(os_1.EOL) +
+                "<style> pre  {white-space : pre-wrap}</style>".concat(os_1.EOL) +
                 "</head>".concat(os_1.EOL) +
                 "<body>";
         try {
@@ -84,8 +85,11 @@ function renderHtml(item) {
                     if (!opened) {
                         render += '<pre>';
                         opened = true;
+                        render += "".concat(child.trimStart());
                     }
-                    render += "".concat(child.trimStart().trimEnd());
+                    else {
+                        render += "".concat(child);
+                    }
                 }
                 else {
                     if (child.attributes.length <= 0) {
@@ -99,6 +103,7 @@ function renderHtml(item) {
                         }
                         else {
                             if (opened) {
+                                render = render.trimEnd();
                                 render += '</pre>';
                                 opened = false;
                             }
