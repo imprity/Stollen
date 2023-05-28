@@ -6,8 +6,8 @@ import { argv } from 'process';
 const args = argv.slice(2);
 
 if (args.findIndex((str) => {return str === '-h' }) >= 0) {
-    console.log('with out any arguments, parses the file that ends with .st')
-    console.log('and compared the output to .st.test')
+    console.log('with out any arguments, parses the file that ends with .frt')
+    console.log('and compared the output to .frt.test')
     console.log('')
     console.log('-u : update the test cases')
     console.log('-h : prints this message')
@@ -34,7 +34,7 @@ if (args.findIndex((str) => { return str === '-d' }) >= 0) {
     let deletedFiles = [];
 
     for (const file of files) {
-        if (file.isFile() && file.name.endsWith('.st.fail')) {
+        if (file.isFile() && file.name.endsWith('.frt.fail')) {
             let fullPath = path.join(__dirname, file.name);
             try{
                 fs.unlinkSync(fullPath);
@@ -58,7 +58,7 @@ if (args.findIndex((str) => { return str === '-d' }) >= 0) {
 let testCases: Map<string, string> = new Map<string, string>();
 
 for (const file of files) {
-    if (file.isFile() && file.name.endsWith('.st')) {
+    if (file.isFile() && file.name.endsWith('.frt')) {
         let filePath = path.join(__dirname, file.name);
         let content = fs.readFileSync(filePath, 'utf-8' );
 

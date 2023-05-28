@@ -34,8 +34,8 @@ var path = require("path");
 var process_1 = require("process");
 var args = process_1.argv.slice(2);
 if (args.findIndex(function (str) { return str === '-h'; }) >= 0) {
-    console.log('with out any arguments, parses the file that ends with .st');
-    console.log('and compared the output to .st.test');
+    console.log('with out any arguments, parses the file that ends with .frt');
+    console.log('and compared the output to .frt.test');
     console.log('');
     console.log('-u : update the test cases');
     console.log('-h : prints this message');
@@ -58,7 +58,7 @@ if (args.findIndex(function (str) { return str === '-d'; }) >= 0) {
     try {
         for (var files_1 = __values(files), files_1_1 = files_1.next(); !files_1_1.done; files_1_1 = files_1.next()) {
             var file = files_1_1.value;
-            if (file.isFile() && file.name.endsWith('.st.fail')) {
+            if (file.isFile() && file.name.endsWith('.frt.fail')) {
                 var fullPath = path.join(__dirname, file.name);
                 try {
                     fs.unlinkSync(fullPath);
@@ -100,7 +100,7 @@ var testCases = new Map();
 try {
     for (var files_2 = __values(files), files_2_1 = files_2.next(); !files_2_1.done; files_2_1 = files_2.next()) {
         var file = files_2_1.value;
-        if (file.isFile() && file.name.endsWith('.st')) {
+        if (file.isFile() && file.name.endsWith('.frt')) {
             var filePath = path.join(__dirname, file.name);
             var content = fs.readFileSync(filePath, 'utf-8');
             testCases.set(file.name, content.replace(/\r\n/g, '\n'));
