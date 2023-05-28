@@ -1,5 +1,6 @@
 {
     "[plaintext]": {
         "editor.bracketPairColorization.enabled": false,
+        "editor.wordWrap": "on"
     }
 }
