@@ -2,7 +2,7 @@
 /*
 This is a simple example that demontrates how stollen can be used.
 
-It compiles example.st to index.html
+It compiles example.frt to index.html
 */
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -37,7 +37,7 @@ var st = require("../lib");
 var path = require("path");
 var process = require("process");
 var os_1 = require("os");
-var srcPath = path.join(__dirname, './example.st');
+var srcPath = path.join(__dirname, './example.frt');
 var content = fs.readFileSync(srcPath, 'utf-8');
 var tokenizer = new st.Tokenizer(content, srcPath);
 var parser = new st.Parser(tokenizer.tokenize());

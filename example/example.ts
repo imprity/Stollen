@@ -1,7 +1,7 @@
 /*
 This is a simple example that demontrates how stollen can be used.
 
-It compiles example.st to index.html
+It compiles example.frt to index.html
 */
 
 import * as fs from 'fs'
@@ -10,7 +10,7 @@ import * as path from 'path'
 import * as process from 'process'
 import { EOL } from 'os'
 
-const srcPath = path.join(__dirname, './example.st');
+const srcPath = path.join(__dirname, './example.frt');
 
 const content = fs.readFileSync(srcPath, 'utf-8');
 
