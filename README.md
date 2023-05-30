@@ -9,13 +9,13 @@ Syntax is like this
 
 ```
 outer text
-{! attribute1 attribute2 attribute3}[
+{| attribute1 attribute2 attribute3}[
     some text
-    {!"child attribute 1" "child attribute 2"}[
+    {|"child attribute 1" "child attribute 2"}[
         child text
-    !]
+    |]
     other text
-!]
+|]
 other outer text
 ```
 
@@ -66,16 +66,16 @@ you always have to escpae
 @@
 
 in most outer body, you only need to escpae
-@{! @!]
+@{| @|]
 
-{!
+{|
     in attributes you only need to escape
     @} @"
 }
 [
     same as most outer body, you only need to escpae
-    @{! @!]
-!]
+    @{| @|]
+|]
 ```
 
 # TODO

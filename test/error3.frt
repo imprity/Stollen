@@ -1,1 +1,1 @@
-{!between ->} :D [<- there can be only whitespace!]
+{|between ->} :D [<- there can be only whitespace|]
