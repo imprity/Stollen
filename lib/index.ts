@@ -702,4 +702,36 @@ function dumpTree(item: Item, inColor: boolean = false): string {
     return text;
 }
 
-export { Token, TokenTypes, Tokenizer, Parser, Item, prettyPrint, dumpTree }
+function parse(srcText : string, srcPath : string, 
+    option : 
+    {
+        errorInColor? : boolean, 
+        normalizeLineEnding? : boolean
+    } = 
+    {
+        errorInColor : true, 
+        normalizeLineEnding : false
+    }
+    ) : [Item | null, string | null]{
+
+    if(option.errorInColor === undefined || 
+        option.errorInColor === null){
+        option.errorInColor = true;
+    }
+    if(option.normalizeLineEnding === undefined || 
+        option.normalizeLineEnding === null){
+        option.normalizeLineEnding = false;
+    }
+
+    if(option.normalizeLineEnding){
+        srcText = srcText.replace('\r\n', '\n');
+    }
+
+    let tokenizer = new Tokenizer(srcText, srcPath);
+    let tokens = tokenizer.tokenize();
+
+    let parser = new Parser(tokens);
+    return parser.parse(option.errorInColor);
+}
+
+export { Item, parse, prettyPrint, dumpTree }

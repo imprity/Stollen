@@ -115,9 +115,7 @@ finally {
     finally { if (e_3) throw e_3.error; }
 }
 function parseSrcAndConvertToTestCase(src, srcPath) {
-    var tokenizer = new st.Tokenizer(src, srcPath);
-    var parser = new st.Parser(tokenizer.tokenize());
-    var _a = __read(parser.parse(false), 2), root = _a[0], errorMsg = _a[1];
+    var _a = __read(st.parse(src, srcPath, { errorInColor: false }), 2), root = _a[0], errorMsg = _a[1];
     var testCase = "";
     if (errorMsg !== null) {
         testCase = 'ERROR\n' + errorMsg;

@@ -14,10 +14,7 @@ const srcPath = path.join(__dirname, './example.frt');
 
 const content = fs.readFileSync(srcPath, 'utf-8');
 
-const tokenizer = new st.Tokenizer(content, srcPath);
-const parser = new st.Parser(tokenizer.tokenize());
-
-const [root, errorMsg] = parser.parse(Boolean(process.stdout.isTTY));
+const [root, errorMsg] = st.parse(content, srcPath ,{ errorInColor : Boolean(process.stdout.isTTY)});
 
 if (errorMsg) {
     console.error(errorMsg);

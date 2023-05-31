@@ -88,9 +88,7 @@ try {
         }
         try {
             var content = fs.readFileSync(filePath, 'utf-8');
-            var tokenizer = new st.Tokenizer(content, filePath);
-            var parser = new st.Parser(tokenizer.tokenize());
-            var _b = __read(parser.parse(Boolean(process.stdout.isTTY)), 2), root = _b[0], errorMsg = _b[1];
+            var _b = __read(st.parse(content, filePath, { errorInColor: Boolean(process.stdout.isTTY) }), 2), root = _b[0], errorMsg = _b[1];
             if (errorMsg) {
                 console.error(errorMsg);
             }

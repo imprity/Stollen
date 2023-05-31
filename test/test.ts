@@ -67,9 +67,7 @@ for (const file of files) {
 }
 
 function parseSrcAndConvertToTestCase(src: string, srcPath: string) : string{
-    let tokenizer = new st.Tokenizer(src, srcPath);
-    let parser = new st.Parser(tokenizer.tokenize());
-    let [root, errorMsg] = parser.parse(false);
+    let [root, errorMsg] = st.parse(src, srcPath, {errorInColor : false})
 
     let testCase = "";
 

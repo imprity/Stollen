@@ -39,9 +39,7 @@ var process = require("process");
 var os_1 = require("os");
 var srcPath = path.join(__dirname, './example.frt');
 var content = fs.readFileSync(srcPath, 'utf-8');
-var tokenizer = new st.Tokenizer(content, srcPath);
-var parser = new st.Parser(tokenizer.tokenize());
-var _a = __read(parser.parse(Boolean(process.stdout.isTTY)), 2), root = _a[0], errorMsg = _a[1];
+var _a = __read(st.parse(content, srcPath, { errorInColor: Boolean(process.stdout.isTTY) }), 2), root = _a[0], errorMsg = _a[1];
 if (errorMsg) {
     console.error(errorMsg);
     process.exit(6969);

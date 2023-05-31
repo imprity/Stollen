@@ -53,9 +53,7 @@ for(const filePath of args){
     }
     try{
         let content = fs.readFileSync(filePath, 'utf-8');
-        let tokenizer = new st.Tokenizer(content, filePath);
-        let parser = new st.Parser(tokenizer.tokenize());
-        let [root, errorMsg] = parser.parse(Boolean(process.stdout.isTTY));
+        let [root, errorMsg] = st.parse(content, filePath, {errorInColor : Boolean(process.stdout.isTTY)})
 
         if(errorMsg){
             console.error(errorMsg);
