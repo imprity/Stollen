@@ -724,7 +724,7 @@ function parse(srcText : string, srcPath : string,
     }
 
     if(option.normalizeLineEnding){
-        srcText = srcText.replace('\r\n', '\n');
+        srcText = srcText.replace(/\r\n/g, '\n');
     }
 
     let tokenizer = new Tokenizer(srcText, srcPath);
