@@ -8,13 +8,12 @@ import * as fs from 'fs'
 import * as st from '../lib'
 import * as path from 'path'
 import * as process from 'process'
-import { EOL } from 'os'
 
 const srcPath = path.join(__dirname, './example.frt');
 
 const content = fs.readFileSync(srcPath, 'utf-8');
 
-const [root, errorMsg] = st.parse(content, srcPath ,{ errorInColor : Boolean(process.stdout.isTTY)});
+const [root, errorMsg] = st.parse(content, srcPath ,{ errorInColor : Boolean(process.stdout.isTTY), normalizeLineEnding : true});
 
 if (errorMsg) {
     console.error(errorMsg);
@@ -37,10 +36,10 @@ function renderHtml(item: st.Item): string {
     let opened = false;
     if (item.isRoot()) {
         render +=
-        `<html>${EOL}`+
-        `<head>${EOL}`+
-        `<style> pre  {white-space : pre-wrap}</style>${EOL}`+
-        `</head>${EOL}`+
+        `<html>\n`+
+        `<head>\n`+
+        `<style> pre  {white-space : pre-wrap}</style>\n`+
+        `</head>\n`+
         `<body>`;
         for (const child of item.body) {
             if (typeof child === 'string') {
@@ -69,7 +68,7 @@ function renderHtml(item: st.Item): string {
                             render+= '</pre>'
                             opened = false;
                         }
-                        render += `${EOL}${renderHtml(child)}${EOL}`
+                        render += `\n${renderHtml(child)}\n`
                     }
                 }
             }   
@@ -77,8 +76,8 @@ function renderHtml(item: st.Item): string {
         if(opened){
             render += '</pre>'
         }
-        render += `${EOL}`+
-        `</body>${EOL}`+
+        render += `\n`+
+        `</body>\n`+
         `</html>`;
     }
     else {
@@ -100,17 +99,17 @@ function renderHtml(item: st.Item): string {
                 } break;
                 case 'ul':
                 case 'ol': {
-                    render += `<${item.attributes[0]}>${EOL}`
+                    render += `<${item.attributes[0]}>\n`
                     for (const child of item.body) {
                         if (
                             typeof child !== 'string' &&
                             child.attributes.length > 0 &&
                             child.attributes[0] == 'li'
                         ) {
-                            render += `<li>${getTextsFromBody(child)}</li>${EOL}`
+                            render += `<li>${getTextsFromBody(child)}</li>\n`
                         }
                     }
-                    render += `</${item.attributes[0]}>${EOL}`
+                    render += `</${item.attributes[0]}>\n`
                 }break;
                 case 'code':{
                     render += '<pre><code>'

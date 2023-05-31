@@ -36,10 +36,9 @@ var fs = require("fs");
 var st = require("../lib");
 var path = require("path");
 var process = require("process");
-var os_1 = require("os");
 var srcPath = path.join(__dirname, './example.frt');
 var content = fs.readFileSync(srcPath, 'utf-8');
-var _a = __read(st.parse(content, srcPath, { errorInColor: Boolean(process.stdout.isTTY) }), 2), root = _a[0], errorMsg = _a[1];
+var _a = __read(st.parse(content, srcPath, { errorInColor: Boolean(process.stdout.isTTY), normalizeLineEnding: true }), 2), root = _a[0], errorMsg = _a[1];
 if (errorMsg) {
     console.error(errorMsg);
     process.exit(6969);
@@ -71,10 +70,10 @@ function renderHtml(item) {
     var opened = false;
     if (item.isRoot()) {
         render +=
-            "<html>".concat(os_1.EOL) +
-                "<head>".concat(os_1.EOL) +
-                "<style> pre  {white-space : pre-wrap}</style>".concat(os_1.EOL) +
-                "</head>".concat(os_1.EOL) +
+            "<html>\n" +
+                "<head>\n" +
+                "<style> pre  {white-space : pre-wrap}</style>\n" +
+                "</head>\n" +
                 "<body>";
         try {
             for (var _c = __values(item.body), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -105,7 +104,7 @@ function renderHtml(item) {
                                 render += '</pre>';
                                 opened = false;
                             }
-                            render += "".concat(os_1.EOL).concat(renderHtml(child)).concat(os_1.EOL);
+                            render += "\n".concat(renderHtml(child), "\n");
                         }
                     }
                 }
@@ -121,8 +120,8 @@ function renderHtml(item) {
         if (opened) {
             render += '</pre>';
         }
-        render += "".concat(os_1.EOL) +
-            "</body>".concat(os_1.EOL) +
+        render += "\n" +
+            "</body>\n" +
             "</html>";
     }
     else {
@@ -148,14 +147,14 @@ function renderHtml(item) {
                 case 'ul':
                 case 'ol':
                     {
-                        render += "<".concat(item.attributes[0], ">").concat(os_1.EOL);
+                        render += "<".concat(item.attributes[0], ">\n");
                         try {
                             for (var _e = __values(item.body), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var child = _f.value;
                                 if (typeof child !== 'string' &&
                                     child.attributes.length > 0 &&
                                     child.attributes[0] == 'li') {
-                                    render += "<li>".concat(getTextsFromBody(child), "</li>").concat(os_1.EOL);
+                                    render += "<li>".concat(getTextsFromBody(child), "</li>\n");
                                 }
                             }
                         }
@@ -166,7 +165,7 @@ function renderHtml(item) {
                             }
                             finally { if (e_3) throw e_3.error; }
                         }
-                        render += "</".concat(item.attributes[0], ">").concat(os_1.EOL);
+                        render += "</".concat(item.attributes[0], ">\n");
                     }
                     break;
                 case 'code':
