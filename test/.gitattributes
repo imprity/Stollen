@@ -1,4 +1,0 @@
-#these files always use \n for convinience
-
-*.frt.test eol=lf
-*.frt.fail eol=lf
