@@ -70,7 +70,7 @@ for(const filePath of args){
                     console.log(JSON.stringify(rootClone, null, 4))
                 }break;
                 case 'dump' : {
-                    console.log(st.dumpTree(root, Boolean(process.stdout.isTTY)))
+                    console.log(st.dumpTree(root, Boolean(process.stdout.isTTY)));
                 }break;
             }
         }

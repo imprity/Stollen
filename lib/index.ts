@@ -438,8 +438,8 @@ class Parser {
             return [this.root, this.errorUnclosedBody(openBodyStack[openBodyStack.length - 1])]
         }
 
-        //this.removeNewLineAtBeginningAndEndOfBody(this.root);
         this.removeIndent(this.root)
+        this.removeNewLineAtBeginningAndEndOfBody(this.root);
         this.removeEmptyStringFromBody(this.root);
 
         return [this.root, null];
@@ -481,14 +481,6 @@ class Parser {
                         }
                         
                         gotIndentString = true;
-
-                        if (indentString.length > 0) {
-                            console.log(`"${indentString
-                                .replace(/\r/g, '\\r')
-                                .replace(/\n/g, '\\n')
-                                .replace(/\t/g, '\\t')
-                                .replace(/ /g, '|')}"`);
-                        }
                     }
                 }
             }
