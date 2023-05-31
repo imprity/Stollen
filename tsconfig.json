@@ -2,6 +2,7 @@
     "compilerOptions": {
         "downlevelIteration": true,
         "sourceMap": true,
+        "newLine": "lf"
     },
     "files": [
         "bread.ts",
