@@ -438,14 +438,14 @@ class Parser {
             return [this.root, this.errorUnclosedBody(openBodyStack[openBodyStack.length - 1])]
         }
 
-        this.removeIndent(this.root)
+        this.removeIndentAndBar(this.root)
         this.removeNewLineAtBeginningAndEndOfBody(this.root);
         this.removeEmptyStringFromBody(this.root);
 
         return [this.root, null];
     }
 
-    removeIndent(root: Item) {
+    removeIndentAndBar(root: Item) {
         if (root.body.length <= 0) {
             return;
         }
@@ -455,11 +455,10 @@ class Parser {
 
         let foundFirstStringWithNewLine = false;
 
-        //for(const child of root.body){
         for (let i = 0; i < root.body.length; i++) {
             const child = root.body[i];
             if (typeof child !== 'string') {
-                this.removeIndent(child)
+                this.removeIndentAndBar(child)
                 continue;
             }
             if (!foundFirstStringWithNewLine && !gotIndentString) {
@@ -488,20 +487,24 @@ class Parser {
                 let newString = "";
 
                 let indentStringIndex = 0;
-                let ignore = false;
+                let ignoringIndent = false;
 
                 for(let j=0; j<child.length; j++){
                     if(child[j] === '\n'){
-                        ignore = true;
+                        ignoringIndent = true;
                         newString += child[j]
                         indentStringIndex = 0;
                         continue;
                     }
-                    if(ignore){
+                    if(ignoringIndent){
                         if(indentStringIndex >= indentString.length 
                             || child[j] !== indentString[indentStringIndex++]){
-                            ignore = false;
-                            newString += child[j];
+                            ignoringIndent = false;
+                            //we are at the first character after indent
+                            //if it starts with '|' we skip that
+                            if(child[j] !== '|'){
+                                newString += child[j];
+                            }
                             indentStringIndex = 0;
                         }
                     }else{
