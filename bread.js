@@ -34,9 +34,23 @@ var process = require("process");
 var args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '-h') {
     console.log('parses the files passed to arguments and prints tree');
+    console.log('');
+    console.log('usage : file1.frt file2.frt file3.frt [--json, --dump]');
+    console.log('');
     console.log('-h     : prints this message');
     console.log('--json : print as json');
+    console.log('--dump : dump without formatting');
     process.exit(0);
+}
+var printMode = 'pretty';
+{
+    var lastArg = args[args.length - 1];
+    if (lastArg === '--json') {
+        printMode = 'json';
+    }
+    else if (lastArg === '--dump') {
+        printMode = 'dump';
+    }
 }
 var ItemWithoutPrent = /** @class */ (function () {
     function ItemWithoutPrent(item) {
@@ -69,7 +83,7 @@ var ItemWithoutPrent = /** @class */ (function () {
 try {
     for (var args_1 = __values(args), args_1_1 = args_1.next(); !args_1_1.done; args_1_1 = args_1.next()) {
         var filePath = args_1_1.value;
-        if (filePath === '--json' || filePath === '-h') {
+        if (filePath.startsWith('-')) {
             continue;
         }
         try {
@@ -81,12 +95,23 @@ try {
                 console.error(errorMsg);
             }
             else {
-                if (args.includes('--json')) {
-                    var rootClone = new ItemWithoutPrent(root);
-                    console.log(JSON.stringify(rootClone, null, 4));
-                }
-                else {
-                    console.log(st.prettyPrint(root, Boolean(process.stdout.isTTY)));
+                switch (printMode) {
+                    case 'pretty':
+                        {
+                            console.log(st.prettyPrint(root, Boolean(process.stdout.isTTY)));
+                        }
+                        break;
+                    case 'json':
+                        {
+                            var rootClone = new ItemWithoutPrent(root);
+                            console.log(JSON.stringify(rootClone, null, 4));
+                        }
+                        break;
+                    case 'dump':
+                        {
+                            console.log(st.dumpTree(root, Boolean(process.stdout.isTTY)));
+                        }
+                        break;
                 }
             }
         }

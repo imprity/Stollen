@@ -201,13 +201,13 @@ class Parser {
         this.tokens = tokens;
     }
 
-    printInColor :boolean = true;
+    printInColor: boolean = true;
 
-    inRed(str) : string{
-        if(this.printInColor){
+    inRed(str): string {
+        if (this.printInColor) {
             return colors.red(str);
         }
-        else{
+        else {
             return str;
         }
     }
@@ -215,13 +215,13 @@ class Parser {
     checkType(
         token: Token,
         possibleTypes: TokenTypeOrWhiteSpace[] | TokenTypeOrWhiteSpace,
-        ): string | null {
+    ): string | null {
         if (typeof (possibleTypes) === 'string') {
             possibleTypes = [possibleTypes];
         }
 
         for (const type of possibleTypes) {
-            if(type === 'whitespace' && token.type === 'text' && token.isWhiteSpace()){
+            if (type === 'whitespace' && token.type === 'text' && token.isWhiteSpace()) {
                 return null;
             }
             else if (token.type === type) {
@@ -288,11 +288,11 @@ class Parser {
     errorUnknowType(token: Token): string {
         return this.inRed(`Error at ${token.docLocation()} : weird token...`);
     }
-    errorUnclosedBody(openendAt : Token) :string{
+    errorUnclosedBody(openendAt: Token): string {
         return this.inRed(`Error : unclosed [ at ${openendAt.docLocation()}`);
     }
 
-    parse(errorInColor : boolean): [Item , string | null] {
+    parse(errorInColor: boolean): [Item, string | null] {
         if (this.tokens.length <= 0) {
             return [this.root, null];
         }
@@ -300,7 +300,7 @@ class Parser {
         this.printInColor = errorInColor;
 
         const items: Array<Item> = [this.root];
-        const openBodyStack : Token[] = []; //for matching [
+        const openBodyStack: Token[] = []; //for matching [
 
         let insideAttributes = false;
         let insideQuote = false;
@@ -384,7 +384,7 @@ class Parser {
                         } break;
                     }
                 }
-            }
+            } //outside of attribute (inside of body)
             else {
                 switch (tokenNow.type) {
                     case ESCAPE_CHAR: {
@@ -434,77 +434,155 @@ class Parser {
             }
         }
 
-        if(openBodyStack.length > 0){
-            return [this.root, this.errorUnclosedBody(openBodyStack[openBodyStack.length -1])]
+        if (openBodyStack.length > 0) {
+            return [this.root, this.errorUnclosedBody(openBodyStack[openBodyStack.length - 1])]
         }
 
-        this.removeNewLineAtBeginningAndEndOfBody(this.root);
+        //this.removeNewLineAtBeginningAndEndOfBody(this.root);
+        this.removeIndent(this.root)
         this.removeEmptyStringFromBody(this.root);
 
         return [this.root, null];
     }
 
-    removeNewLineAtBeginningAndEndOfBody(root : Item){
+    removeIndent(root: Item) {
+        if (root.body.length <= 0) {
+            return;
+        }
+
+        let gotIndentString = false;
+        let indentString: string = "";
+
+        let foundFirstStringWithNewLine = false;
+
+        //for(const child of root.body){
+        for (let i = 0; i < root.body.length; i++) {
+            const child = root.body[i];
+            if (typeof child !== 'string') {
+                this.removeIndent(child)
+                continue;
+            }
+            if (!foundFirstStringWithNewLine && !gotIndentString) {
+                let newLineIndex = child.indexOf('\n');
+
+                if (newLineIndex >= 0) {
+                    foundFirstStringWithNewLine = true;
+                    let stringAfterFirstNewLine = child.slice(newLineIndex + 1);
+                    if (stringAfterFirstNewLine.length > 0) {
+                        let newLineOrCharacter = /[\S\r\n]/;
+
+                        let matchResult = newLineOrCharacter.exec(stringAfterFirstNewLine);
+
+                        if (matchResult) {
+                            indentString = stringAfterFirstNewLine.slice(0, matchResult.index);
+                        }
+                        else {
+                            indentString = stringAfterFirstNewLine;
+                        }
+                        
+                        gotIndentString = true;
+
+                        if (indentString.length > 0) {
+                            console.log(`"${indentString
+                                .replace(/\r/g, '\\r')
+                                .replace(/\n/g, '\\n')
+                                .replace(/\t/g, '\\t')
+                                .replace(/ /g, '|')}"`);
+                        }
+                    }
+                }
+            }
+            if (gotIndentString && indentString.length > 0) {
+                let newString = "";
+
+                let indentStringIndex = 0;
+                let ignore = false;
+
+                for(let j=0; j<child.length; j++){
+                    if(child[j] === '\n'){
+                        ignore = true;
+                        newString += child[j]
+                        indentStringIndex = 0;
+                        continue;
+                    }
+                    if(ignore){
+                        if(indentStringIndex >= indentString.length 
+                            || child[j] !== indentString[indentStringIndex++]){
+                            ignore = false;
+                            newString += child[j];
+                            indentStringIndex = 0;
+                        }
+                    }else{
+                        newString += child[j]
+                    }
+                }
+
+                root.body[i] = newString;
+            }
+        }
+    }
+
+    removeNewLineAtBeginningAndEndOfBody(root: Item) {
         //we will remove the new line at the 
         //[       ]
         // ^ and ^
 
-        if(root.body.length <= 0){
+        if (root.body.length <= 0) {
             return;
         }
 
-        let first :()=>any = ()=>root.body[0];
-        let last  :()=>any = ()=>root.body[root.body.length - 1];
+        let first: () => any = () => root.body[0];
+        let last: () => any = () => root.body[root.body.length - 1];
 
         //remove new line at the start
-        if(typeof first() === 'string'){
-            if(first().startsWith('\r\n')){
+        if (typeof first() === 'string') {
+            if (first().startsWith('\r\n')) {
                 root.body[0] = first().slice(2)
-            }else if(first().startsWith('\n')){
+            } else if (first().startsWith('\n')) {
                 root.body[0] = first().slice(1)
             }
         }
         //remove new line at the end
-        if(typeof last() === 'string'){
-            if(last().endsWith('\r\n')){
+        if (typeof last() === 'string') {
+            if (last().endsWith('\r\n')) {
                 root.body[root.body.length - 1] = last().slice(0, -2)
-            }else if(last().endsWith('\n')){
+            } else if (last().endsWith('\n')) {
                 root.body[root.body.length - 1] = last().slice(0, -1)
             }
         }
 
         //recurse down to children in the body
-        for(const child of root.body){
-            if(typeof child === 'object'){
+        for (const child of root.body) {
+            if (typeof child === 'object') {
                 this.removeNewLineAtBeginningAndEndOfBody(child)
             }
         }
     }
 
-    removeEmptyStringFromBody(item : Item){
-        item.body = item.body.filter((child)=>{
-            if(typeof child === "string" && child.length === 0){
+    removeEmptyStringFromBody(item: Item) {
+        item.body = item.body.filter((child) => {
+            if (typeof child === "string" && child.length === 0) {
                 return false;
             }
             return true;
         })
 
-        for(const child of item.body){
-            if(typeof child !== 'string'){
+        for (const child of item.body) {
+            if (typeof child !== 'string') {
                 this.removeEmptyStringFromBody(child);
             }
         }
     }
 }
 
-function prettyPrint(item: Item, inColor : boolean = true , level = 0): string {
+function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
     let inGreen = colors.green;
     let inBlue = colors.blue;
-    if(!inColor){
-        inGreen = (str : string)=>{return str}
-        inBlue = (str : string)=>{return str}
+    if (!inColor) {
+        inGreen = (str: string) => { return str }
+        inBlue = (str: string) => { return str }
     }
-    
+
     const TAB = 4;
 
     let singleTab = '';
@@ -541,7 +619,7 @@ function prettyPrint(item: Item, inColor : boolean = true , level = 0): string {
 
         for (const child of item.body) {
             if (typeof child === 'string') {
-                toPrint += indent  + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
+                toPrint += indent + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
             }
             else {
                 toPrint += prettyPrint(child, inColor, level + 1) + '\n';
@@ -553,23 +631,30 @@ function prettyPrint(item: Item, inColor : boolean = true , level = 0): string {
     return toPrint + indent + inBlue(']');
 }
 
-function dumpTree(item : Item) : string{
-    let text = "{|";
-    for(const attr of item.attributes){
-        text += ` "${attr.replace(/"/g, '\\"')}"`
+function dumpTree(item: Item, inColor : boolean = false): string {
+    let inGreen = colors.green;
+    let inBlue = colors.blue;
+    if (!inColor) {
+        inGreen = (str: string) => { return str }
+        inBlue = (str: string) => { return str }
     }
-    text += ' }['
+    let text = inBlue("{|");
+    for (const attr of item.attributes) {
+        const attrStr = inGreen(`"${attr.replace(/"/g, '\\"')}"`);
+        text += ` ${attrStr}`
+    }
+    text += ' ' + inBlue('}[')
     for (const child of item.body) {
         if (typeof child === 'string') {
             text += child;
         }
         else {
-            text += dumpTree(child);
+            text += dumpTree(child, inColor);
         }
     }
-    text += '|]';
+    text += inBlue('|]');
 
     return text;
 }
 
-export { Token, TokenTypes, Tokenizer, Parser, Item, prettyPrint, dumpTree}
+export { Token, TokenTypes, Tokenizer, Parser, Item, prettyPrint, dumpTree }
