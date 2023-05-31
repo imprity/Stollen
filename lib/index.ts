@@ -445,6 +445,34 @@ class Parser {
         return [this.root, null];
     }
 
+    /*
+    we are trying to guess how much indent
+    object has inside the body and remove them
+
+    we do this by getting how much indent the first line has
+    so for example
+        {|div}[
+            hello world!
+        |]
+    has 4 spaces as indent inside the body
+    
+    but what about this case
+        {|div}[
+        \n
+            hello world\n
+        |]
+    it would be counter intuitive to say that above example has no indentation
+    so we should ignore the lines that are just whitespaces
+
+    and we also have to account for the cases like this
+        {|div}[
+            {|h1}[title|]
+                hello world\n
+        |]
+    this div will start with the line that consists only of white spaces
+    so if just ignore the lines that only have whitespaces,
+    we will incorrectly guess the indent
+    */
     removeIndentAndBar(root: Item) {
         if (root.body.length <= 0) {
             return;
@@ -453,61 +481,83 @@ class Parser {
         let gotIndentString = false;
         let indentString: string = "";
 
-        let foundFirstStringWithNewLine = false;
-
         for (let i = 0; i < root.body.length; i++) {
             const child = root.body[i];
             if (typeof child !== 'string') {
                 this.removeIndentAndBar(child)
                 continue;
             }
-            if (!foundFirstStringWithNewLine && !gotIndentString) {
-                let newLineIndex = child.indexOf('\n');
+            if (!child.includes('\n')) {
+                continue;
+            }
+            if (!gotIndentString) {
+                let lines = child.split('\n')
+                for (let j = 1; j < lines.length; j++) {
+                    const line = lines[j];
 
-                if (newLineIndex >= 0) {
-                    foundFirstStringWithNewLine = true;
-                    let stringAfterFirstNewLine = child.slice(newLineIndex + 1);
-                    if (stringAfterFirstNewLine.length > 0) {
-                        let newLineOrCharacter = /[\S\r\n]/;
+                    if (line.match(/\S/) === null) { //line is just a white space
+                        if (
+                            j === (lines.length - 1) &&   //this is the last line
+                            root.body.length > i + 1 //we have a next item
+                        ) {
+                            //we assume that next item is not a string
+                            //we will throw error if it's a string
 
-                        let matchResult = newLineOrCharacter.exec(stringAfterFirstNewLine);
+                            //TODO : either change the logic to handle the case where
+                            //next item is a string
+                            //or merge consecutive texts before doing all of this
+                            if (typeof root.body[i + 1] === 'string') {
+                                throw new Error('Internal bug in stollen. Text should not be next to each other');
+                            }
 
-                        if (matchResult) {
-                            indentString = stringAfterFirstNewLine.slice(0, matchResult.index);
+                            let carriageReturnIndex = line.indexOf('\r');
+
+                            if (carriageReturnIndex >= 0) {
+                                indentString = line.slice(0, carriageReturnIndex);
+                            }
+                            else {
+                                indentString = line;
+                            }
+                            gotIndentString = true;
+                            break;
                         }
-                        else {
-                            indentString = stringAfterFirstNewLine;
-                        }
-                        
+                    }
+                    else {
+                        let re = /[\S\r]/ //carraige return or non whitespace
+                        let match = re.exec(line);
+
+                        indentString = line.slice(0, match.index);
                         gotIndentString = true;
+                        break;
                     }
                 }
             }
+
             if (gotIndentString && indentString.length > 0) {
                 let newString = "";
 
                 let indentStringIndex = 0;
                 let ignoringIndent = false;
 
-                for(let j=0; j<child.length; j++){
-                    if(child[j] === '\n'){
+                for (let j = 0; j < child.length; j++) {
+                    if (child[j] === '\n') {
                         ignoringIndent = true;
                         newString += child[j]
                         indentStringIndex = 0;
                         continue;
                     }
-                    if(ignoringIndent){
-                        if(indentStringIndex >= indentString.length 
-                            || child[j] !== indentString[indentStringIndex++]){
+                    if (ignoringIndent) {
+                        if (indentStringIndex >= indentString.length
+                            || child[j] !== indentString[indentStringIndex++]) {
                             ignoringIndent = false;
                             //we are at the first character after indent
                             //if it starts with '|' we skip that
-                            if(child[j] !== '|'){
+                            if (child[j] !== '|') {
                                 newString += child[j];
                             }
                             indentStringIndex = 0;
                         }
-                    }else{
+                    } else {
                         newString += child[j]
                     }
                 }
@@ -626,7 +676,7 @@ function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
     return toPrint + indent + inBlue(']');
 }
 
-function dumpTree(item: Item, inColor : boolean = false): string {
+function dumpTree(item: Item, inColor: boolean = false): string {
     let inGreen = colors.green;
     let inBlue = colors.blue;
     if (!inColor) {
