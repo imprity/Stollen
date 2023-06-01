@@ -68,7 +68,7 @@ And it will convert this file to javascript objects.
 
 ```javascript
 //it also has a pointer to it's parent
-//but I don't know describe circular relations with JSON
+//but I don't know how to describe circular relations with JSON
 {
     "attributes": [],
     "body": [
