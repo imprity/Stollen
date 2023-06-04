@@ -15,6 +15,7 @@ let text =
 {|div}[
     {|em}[Hi buddy!|]
     Sup~
+    [|Howdy|]
 |]
 
 Goodbye World!
@@ -40,7 +41,11 @@ let [root, errorMsg] = st.parse(text, '');
                     "attributes": ["em"],
                     "body": ["Hi buddy!"]
                 },
-                "\nSup~"
+                "\nSup~\n",
+                {
+                    "attributes": [],
+                    "body": ["Howdy"]
+                }
             ]
         },
         "\n\nGoodbye World!"
@@ -59,6 +64,7 @@ outer text
     {|"child attribute 1" "child attribute 2"}[
         child text
     |]
+    [|body with no attributes|]
     other text
 |]
 other outer text
@@ -86,9 +92,12 @@ And it will convert this file to javascript objects.
                         "child attribute 1",
                         "child attribute 2"
                     ],
-                    "body": [
-                        "child text"
-                    ]
+                    "body": ["child text"]
+                },
+                "\n",
+                {
+                    "attributes": [],
+                    "body": ["body with no attributes"]
                 },
                 "\nother text"
             ]
@@ -96,7 +105,6 @@ And it will convert this file to javascript objects.
         "\nother outer text"
     ]
 }
-
 ```
 
 # White Space
@@ -144,7 +152,7 @@ you always have to escpae
 @@
 
 in most outer body, you only need to escpae
-@{| @|]
+@{| @[| @|]
 
 {|
     in attributes you only need to escape
@@ -152,7 +160,7 @@ in most outer body, you only need to escpae
 }
 [
     same as most outer body, you only need to escpae
-    @{| @|]
+    @{| @[| @|]
 |]
 ```
 
