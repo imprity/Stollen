@@ -25,24 +25,26 @@ function first<T>(arr: T[]): T | null {
 const ESCAPE_CHAR = '@'
 type TokenTypes = '{|' | ":" | '}' | '[' | '[|' | '|]' | '"' | 'text' | 'unknown';
 
-class TokenPosition {
+class DocLocation {
     srcPath: string
     column: number = 0;
     lineNumber: number = 0;
     cursor: number = 0;
 
-    docLocation(): string {
+    toString() : string{
         return `"${this.srcPath}:${this.lineNumber + 1}:${this.column + 1}"`
     }
 
-    copy(): TokenPosition {
-        let copy = new TokenPosition();
+    copy(): DocLocation {
+        let copy = new DocLocation();
         copy.srcPath = this.srcPath;
         copy.column = this.column;
         copy.lineNumber = this.lineNumber;
         copy.cursor = this.cursor;
         return copy;
     }
+
+
 }
 
 class Token {
@@ -54,10 +56,10 @@ class Token {
 
     type: TokenTypes = 'unknown';
     text: string = '';
-    pos: TokenPosition;
+    pos: DocLocation;
 
     docLocation(): string {
-        return this.pos.docLocation();
+        return this.pos.toString();
     }
 
     isWhiteSpace(): boolean {
@@ -82,7 +84,7 @@ function pushTextTokenToTokenArray(tokenArray: Token[], textToken: Token) {
     }
 }
 
-function pushTextToTokenArray(tokenArray: Token[], text: string, pos: TokenPosition) {
+function pushTextToTokenArray(tokenArray: Token[], text: string, pos: DocLocation) {
     if (tokenArray.length <= 0 || last(tokenArray).type !== 'text') {
 
         let textToken = new Token();
@@ -99,7 +101,7 @@ function pushTextToTokenArray(tokenArray: Token[], text: string, pos: TokenPosit
 
 function tokenize(srcText: string, srcPath: string): Token[] {
     let tokens: Token[] = [];
-    let currentPos: TokenPosition = new TokenPosition();
+    let currentPos: DocLocation = new DocLocation();
 
     currentPos.srcPath = srcPath;
 
@@ -766,7 +768,7 @@ function inBlue(str: string): string {
 //////////////////////////////////
 //Tree Printing Functions
 //////////////////////////////////
-function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
+function treeToPrettyText(root: Item, inColor: boolean = true, level = 0): string {
     IN_COLOR = inColor;
 
     const TAB = 4;
@@ -787,8 +789,8 @@ function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
 
     toPrint += indent + inBlue('[ {')
 
-    for (let i = 0, l = item.attributeList.length; i < l; i++) {
-        const attr = item.attributeList[i];
+    for (let i = 0, l = root.attributeList.length; i < l; i++) {
+        const attr = root.attributeList[i];
         toPrint += inGreen(`"${attr.replace(/\"/g, '\\"')}"`);
         if (i < l - 1) {
             toPrint += ', '
@@ -797,18 +799,18 @@ function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
 
     toPrint += inBlue('}');
 
-    if (item.body.length === 1 && typeof item.body[0] === 'string') {
-        return toPrint += ' "' + item.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + inBlue(']');
+    if (root.body.length === 1 && typeof root.body[0] === 'string') {
+        return toPrint += ' "' + root.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + inBlue(']');
     }
     else {
         toPrint += '\n'
 
-        for (const child of item.body) {
+        for (const child of root.body) {
             if (typeof child === 'string') {
                 toPrint += indent + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
             }
             else {
-                toPrint += prettyPrint(child, inColor, level + 1) + '\n';
+                toPrint += treeToPrettyText(child, inColor, level + 1) + '\n';
             }
         }
     }
@@ -817,21 +819,21 @@ function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
     return toPrint + indent + inBlue(']');
 }
 
-function dumpTree(item: Item, inColor: boolean = false): string {
+function treeToText(root: Item, inColor: boolean = false): string {
     IN_COLOR = inColor;
 
     let text = inBlue("{|");
-    for (const attr of item.attributeList) {
+    for (const attr of root.attributeList) {
         const attrStr = inGreen(`"${attr.replace(/"/g, '\\"')}"`);
         text += ` ${attrStr}`
     }
     text += ' ' + inBlue('}[')
-    for (const child of item.body) {
+    for (const child of root.body) {
         if (typeof child === 'string') {
             text += child;
         }
         else {
-            text += dumpTree(child, inColor);
+            text += treeToText(child, inColor);
         }
     }
     text += inBlue('|]');
@@ -883,4 +885,4 @@ function errorMissingTextNextColon(colonToken: Token, missingAtLeft: boolean) {
     return inRed(`Error : missing word at ${leftOrRight} for ':' at ${colonToken.docLocation()}`);
 }
 
-export { Item, parse, prettyPrint, dumpTree }
+export { Item, parse, treeToPrettyText , treeToText }

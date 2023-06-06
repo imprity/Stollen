@@ -359,7 +359,7 @@ function parseSrcAndConvertToTestCase(src, srcPath, eol) {
         testCase = 'ERROR' + eol + errorMsg;
     }
     else {
-        testCase = 'OUTPUT' + eol + st.dumpTree(root);
+        testCase = 'OUTPUT' + eol + st.treeToText(root);
     }
     return testCase;
 }

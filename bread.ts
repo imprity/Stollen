@@ -61,14 +61,14 @@ for(const filePath of args){
         else{
             switch (printMode){
                 case 'pretty' : {
-                    console.log(st.prettyPrint(root, Boolean(process.stdout.isTTY)));
+                    console.log(st.treeToPrettyText(root, Boolean(process.stdout.isTTY)));
                 }break;
                 case 'json' : {
                     let rootClone = new ItemWithoutPrent(root);
                     console.log(JSON.stringify(rootClone, null, 4))
                 }break;
                 case 'dump' : {
-                    console.log(st.dumpTree(root, Boolean(process.stdout.isTTY)));
+                    console.log(st.treeToText(root, Boolean(process.stdout.isTTY)));
                 }break;
             }
         }

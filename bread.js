@@ -96,7 +96,7 @@ try {
                 switch (printMode) {
                     case 'pretty':
                         {
-                            console.log(st.prettyPrint(root, Boolean(process.stdout.isTTY)));
+                            console.log(st.treeToPrettyText(root, Boolean(process.stdout.isTTY)));
                         }
                         break;
                     case 'json':
@@ -107,7 +107,7 @@ try {
                         break;
                     case 'dump':
                         {
-                            console.log(st.dumpTree(root, Boolean(process.stdout.isTTY)));
+                            console.log(st.treeToText(root, Boolean(process.stdout.isTTY)));
                         }
                         break;
                 }

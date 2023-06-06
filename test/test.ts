@@ -213,7 +213,7 @@ function parseSrcAndConvertToTestCase(src: string, srcPath: string, eol = '\n'):
         testCase = 'ERROR' + eol + errorMsg;
     }
     else {
-        testCase = 'OUTPUT' + eol + st.dumpTree(root);
+        testCase = 'OUTPUT' + eol + st.treeToText(root);
     }
 
     return testCase;
