@@ -34,7 +34,7 @@ class ItemWithoutPrent{
     body: Array<string | ItemWithoutPrent> = [];
 
     constructor(item : st.Item){
-        this.attributes = item.attributes;
+        this.attributes = item.attributeList;
         for(const child of item.body){
             if(typeof child === 'string'){
                 this.body.push(child)

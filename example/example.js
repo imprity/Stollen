@@ -89,12 +89,12 @@ function renderHtml(item) {
                     }
                 }
                 else {
-                    if (child.attributes.length <= 0) {
+                    if (child.attributeList.length <= 0) {
                         console.error('Element with 0 attribtues that is not root!');
                         process.exit(6969);
                     }
                     else {
-                        var elementType = child.attributes[0];
+                        var elementType = child.attributeList[0];
                         if (inlineTypes.includes(elementType)) { //check if child is inline element
                             render += renderHtml(child);
                         }
@@ -125,17 +125,17 @@ function renderHtml(item) {
             "</html>";
     }
     else {
-        if (item.attributes.length <= 0) {
+        if (item.attributeList.length <= 0) {
             console.error('Element with 0 attribtues that is not root!');
             process.exit(6969);
         }
         else {
-            var elementType = item.attributes[0];
+            var elementType = item.attributeList[0];
             switch (elementType) {
                 case 'a':
                     {
-                        if (item.attributes.length >= 2) {
-                            render += "<a href=\"".concat(item.attributes[1], "\">");
+                        if (item.attributeList.length >= 2) {
+                            render += "<a href=\"".concat(item.attributeList[1], "\">");
                         }
                         else {
                             render += "<a href=\"\">";
@@ -147,13 +147,13 @@ function renderHtml(item) {
                 case 'ul':
                 case 'ol':
                     {
-                        render += "<".concat(item.attributes[0], ">\n");
+                        render += "<".concat(item.attributeList[0], ">\n");
                         try {
                             for (var _e = __values(item.body), _f = _e.next(); !_f.done; _f = _e.next()) {
                                 var child = _f.value;
                                 if (typeof child !== 'string' &&
-                                    child.attributes.length > 0 &&
-                                    child.attributes[0] == 'li') {
+                                    child.attributeList.length > 0 &&
+                                    child.attributeList[0] == 'li') {
                                     render += "<li>".concat(getTextsFromBody(child), "</li>\n");
                                 }
                             }
@@ -165,7 +165,7 @@ function renderHtml(item) {
                             }
                             finally { if (e_3) throw e_3.error; }
                         }
-                        render += "</".concat(item.attributes[0], ">\n");
+                        render += "</".concat(item.attributeList[0], ">\n");
                     }
                     break;
                 case 'code':
@@ -177,9 +177,9 @@ function renderHtml(item) {
                     break;
                 default:
                     {
-                        render += "<".concat(item.attributes[0], ">");
+                        render += "<".concat(item.attributeList[0], ">");
                         render += getTextsFromBody(item);
-                        render += "</".concat(item.attributes[0], ">");
+                        render += "</".concat(item.attributeList[0], ">");
                     }
                     break;
             }

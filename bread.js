@@ -57,7 +57,7 @@ var ItemWithoutPrent = /** @class */ (function () {
         var e_2, _a;
         this.attributes = [];
         this.body = [];
-        this.attributes = item.attributes;
+        this.attributes = item.attributeList;
         try {
             for (var _b = __values(item.body), _c = _b.next(); !_c.done; _c = _b.next()) {
                 var child = _c.value;

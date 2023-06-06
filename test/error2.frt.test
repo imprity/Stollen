@@ -1,2 +1,2 @@
 ERROR
-Error : source unexpectedly ended
+Error : unclosed {| at "error2.frt:1:1"
