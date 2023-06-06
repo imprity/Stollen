@@ -846,6 +846,39 @@ function treeToText(root: Item, inColor: boolean = false): string {
     return text;
 }
 
+/**
+ * This function is mainly for converting it to
+ * JSON string because It's impossible(?) to
+ * represent circular relation in json
+ * @param root 
+ */
+function removeParentFromTree(root: Item): Object {
+    let copy: any = {};
+
+    for (const key of Object.keys(root)) {
+        if (key !== 'parent' && key !== 'body') {
+            copy[key] = root[key];
+        }
+    }
+    copy.body = [];
+
+    for (const child of root.body) {
+        if (typeof child === 'string') {
+            copy.body.push(child);
+        } else {
+            copy.body.push(removeParentFromTree(child));
+        }
+    }
+
+    return copy;
+}
+
+function treeToJsonText(root: Item): string {
+    let clone = removeParentFromTree(root);
+
+    return JSON.stringify(clone, null, 4)
+}
+
 //////////////////////////////////
 //Error Printing Functions
 //////////////////////////////////
@@ -890,4 +923,4 @@ function errorMissingTextNextColon(colonToken: Token, missingAtLeft: boolean) {
     return inRed(`Error : missing word at ${leftOrRight} for ':' at ${colonToken.docLocation()}`);
 }
 
-export { Item, parse, treeToPrettyText, treeToText }
+export { Item, parse, treeToPrettyText, treeToText, removeParentFromTree, treeToJsonText }

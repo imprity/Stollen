@@ -29,24 +29,6 @@ let printMode : PrintMode = 'pretty'
     }
 }
 
-class ItemWithoutPrent{
-    attributes: Array<string> = [];
-    body: Array<string | ItemWithoutPrent> = [];
-
-    constructor(item : st.Item){
-        this.attributes = item.attributeList;
-        for(const child of item.body){
-            if(typeof child === 'string'){
-                this.body.push(child)
-            }
-            else{
-                let cloneChild = new ItemWithoutPrent(child);
-                this.body.push(cloneChild);
-            }
-        }
-    }
-}
-
 for(const filePath of args){
     if(filePath.startsWith('-')){
         continue;
@@ -64,8 +46,7 @@ for(const filePath of args){
                     console.log(st.treeToPrettyText(root, Boolean(process.stdout.isTTY)));
                 }break;
                 case 'json' : {
-                    let rootClone = new ItemWithoutPrent(root);
-                    console.log(JSON.stringify(rootClone, null, 4))
+                    console.log(st.treeToJsonText(root))
                 }break;
                 case 'dump' : {
                     console.log(st.treeToText(root, Boolean(process.stdout.isTTY)));

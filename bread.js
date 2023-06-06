@@ -52,34 +52,6 @@ var printMode = 'pretty';
         printMode = 'dump';
     }
 }
-var ItemWithoutPrent = /** @class */ (function () {
-    function ItemWithoutPrent(item) {
-        var e_2, _a;
-        this.attributes = [];
-        this.body = [];
-        this.attributes = item.attributeList;
-        try {
-            for (var _b = __values(item.body), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var child = _c.value;
-                if (typeof child === 'string') {
-                    this.body.push(child);
-                }
-                else {
-                    var cloneChild = new ItemWithoutPrent(child);
-                    this.body.push(cloneChild);
-                }
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-    }
-    return ItemWithoutPrent;
-}());
 try {
     for (var args_1 = __values(args), args_1_1 = args_1.next(); !args_1_1.done; args_1_1 = args_1.next()) {
         var filePath = args_1_1.value;
@@ -101,8 +73,7 @@ try {
                         break;
                     case 'json':
                         {
-                            var rootClone = new ItemWithoutPrent(root);
-                            console.log(JSON.stringify(rootClone, null, 4));
+                            console.log(st.treeToJsonText(root));
                         }
                         break;
                     case 'dump':
