@@ -1,8 +1,29 @@
 import * as colors from 'colors/safe'
 
+//////////////////////////////////
+//Helper Functions
+//////////////////////////////////
+
+function last<T>(arr: T[]): T | null {
+    if (arr.length === 0) {
+        return null;
+    }
+    return arr[arr.length - 1]
+}
+
+function first<T>(arr: T[]): T | null {
+    if (arr.length === 0) {
+        return null;
+    }
+    return arr[0]
+}
+
+//////////////////////////////////
+//Token Stuff
+//////////////////////////////////
+
 const ESCAPE_CHAR = '@'
 type TokenTypes = '{|' | ":" | '}' | '[' | '[|' | '|]' | '"' | 'text' | 'unknown';
-
 
 class TokenPosition {
     srcPath: string
@@ -50,13 +71,6 @@ class Token {
     isLiteral(): boolean {
         return Token.LITERAL_TOKENS.indexOf(this.type) >= 0;
     }
-}
-
-function last<T>(arr: T[]): T | null {
-    if (arr.length === 0) {
-        return null;
-    }
-    return arr[arr.length - 1]
 }
 
 function pushTextTokenToTokenArray(tokenArray: Token[], textToken: Token) {
@@ -155,84 +169,6 @@ function tokenize(srcText: string, srcPath: string): Token[] {
         }
     }
     return tokens;
-}
-
-class Item {
-    attributeList: Array<string> = [];
-    attributeMap: Map<String, String> = new Map<string, string>();
-
-    body: Array<string | Item> = [];
-    parent: Item | null = null;
-
-    isRoot(): boolean {
-        return this.parent === null;
-    }
-    appendTextToBody(text: string) {
-        //if last element of body is not text or just empty, then append new string element
-        if (this.body.length <= 0 || typeof (this.body[this.body.length - 1]) !== 'string') {
-            this.body.push(text);
-        }
-        //else we appen text to existing element
-        else {
-            this.body[this.body.length - 1] += text;
-        }
-    }
-
-    appendItemToBody(childItem: Item) {
-        childItem.parent = this;
-        this.body.push(childItem);
-    }
-}
-
-function parse(srcText: string, srcPath: string,
-    option:
-        {
-            errorInColor?: boolean,
-            normalizeLineEnding?: boolean
-        } =
-        {
-            errorInColor: true,
-            normalizeLineEnding: false
-        }
-): [Item | null, string | null] {
-
-    if (option.errorInColor === undefined ||
-        option.errorInColor === null) {
-        option.errorInColor = true;
-    }
-    if (option.normalizeLineEnding === undefined ||
-        option.normalizeLineEnding === null) {
-        option.normalizeLineEnding = false;
-    }
-
-    if (option.normalizeLineEnding) {
-        srcText = srcText.replace(/\r\n/g, '\n');
-    }
-
-    let root: Item | null = null;
-
-    IN_COLOR = option.errorInColor;
-
-    let tokens = tokenize(srcText, srcPath);
-    let errorMsg: string | null = null;
-
-    [tokens, errorMsg] = checkMatchAndRefineTokens(tokens)
-
-    if (errorMsg) {
-        return [root, errorMsg];
-    }
-    
-    [root, errorMsg] = convertTokensToItems(tokens);
-
-    if (errorMsg) {
-        return [root, errorMsg];
-    }
-
-    removeIndentAndBar(root)
-    removeNewLineAtBeginningAndEndOfBody(root);
-    removeEmptyStringFromBody(root);
-
-    return [root, errorMsg];
 }
 
 /**
@@ -383,6 +319,37 @@ function checkMatchAndRefineTokens(tokens: Token[]): [Token[], string | null] {
     return [newTokens, null];
 }
 
+//////////////////////////////////
+//Item Stuff
+//////////////////////////////////
+
+class Item {
+    attributeList: Array<string> = [];
+    attributeMap: Map<String, String> = new Map<string, string>();
+
+    body: Array<string | Item> = [];
+    parent: Item | null = null;
+
+    isRoot(): boolean {
+        return this.parent === null;
+    }
+    appendTextToBody(text: string) {
+        //if last element of body is not text or just empty, then append new string element
+        if (this.body.length <= 0 || typeof (this.body[this.body.length - 1]) !== 'string') {
+            this.body.push(text);
+        }
+        //else we appen text to existing element
+        else {
+            this.body[this.body.length - 1] += text;
+        }
+    }
+
+    appendItemToBody(childItem: Item) {
+        childItem.parent = this;
+        this.body.push(childItem);
+    }
+}
+
 function convertTokensToItems(tokens: Token[]): [Item, string | null] {
     const root = new Item();
 
@@ -490,6 +457,57 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
     return [root, null];
 }
 
+function parse(srcText: string, srcPath: string,
+    option:
+        {
+            errorInColor?: boolean,
+            normalizeLineEnding?: boolean
+        } =
+        {
+            errorInColor: true,
+            normalizeLineEnding: false
+        }
+): [Item | null, string | null] {
+
+    if (option.errorInColor === undefined ||
+        option.errorInColor === null) {
+        option.errorInColor = true;
+    }
+    if (option.normalizeLineEnding === undefined ||
+        option.normalizeLineEnding === null) {
+        option.normalizeLineEnding = false;
+    }
+
+    if (option.normalizeLineEnding) {
+        srcText = srcText.replace(/\r\n/g, '\n');
+    }
+
+    let root: Item | null = null;
+
+    IN_COLOR = option.errorInColor;
+
+    let tokens = tokenize(srcText, srcPath);
+    let errorMsg: string | null = null;
+
+    [tokens, errorMsg] = checkMatchAndRefineTokens(tokens)
+
+    if (errorMsg) {
+        return [root, errorMsg];
+    }
+    
+    [root, errorMsg] = convertTokensToItems(tokens);
+
+    if (errorMsg) {
+        return [root, errorMsg];
+    }
+
+    removeIndentAndBar(root)
+    removeNewLineAtBeginningAndEndOfBody(root);
+    removeEmptyStringFromBody(root);
+
+    return [root, errorMsg];
+}
+
 //////////////////////////////////
 //Type Checking Functions
 //////////////////////////////////
@@ -540,13 +558,6 @@ function stringToWords(str: string): Array<string> {
     }
     return arr;
 }
-
-
-/*
-removeIndentAndBar(this.root)
-removeNewLineAtBeginningAndEndOfBody(this.root);
-removeEmptyStringFromBody(this.root);
-*/
 
 /*
 we are trying to guess how much indent
@@ -722,13 +733,41 @@ function removeEmptyStringFromBody(item: Item) {
     }
 }
 
-function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
-    let inGreen = colors.green;
-    let inBlue = colors.blue;
-    if (!inColor) {
-        inGreen = (str: string) => { return str }
-        inBlue = (str: string) => { return str }
+//////////////////////////////////
+//Color Setting
+//////////////////////////////////
+
+let IN_COLOR = false;
+
+function inRed(str: string): string {
+    if (IN_COLOR) {
+        return colors.red(str);
+    } else {
+        return str;
     }
+}
+
+function inGreen(str: string): string {
+    if (IN_COLOR) {
+        return colors.green(str);
+    } else {
+        return str;
+    }
+}
+
+function inBlue(str: string): string {
+    if (IN_COLOR) {
+        return colors.blue(str);
+    } else {
+        return str;
+    }
+}
+
+//////////////////////////////////
+//Tree Printing Functions
+//////////////////////////////////
+function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
+    IN_COLOR = inColor;
 
     const TAB = 4;
 
@@ -779,12 +818,8 @@ function prettyPrint(item: Item, inColor: boolean = true, level = 0): string {
 }
 
 function dumpTree(item: Item, inColor: boolean = false): string {
-    let inGreen = colors.green;
-    let inBlue = colors.blue;
-    if (!inColor) {
-        inGreen = (str: string) => { return str }
-        inBlue = (str: string) => { return str }
-    }
+    IN_COLOR = inColor;
+
     let text = inBlue("{|");
     for (const attr of item.attributeList) {
         const attrStr = inGreen(`"${attr.replace(/"/g, '\\"')}"`);
@@ -805,18 +840,8 @@ function dumpTree(item: Item, inColor: boolean = false): string {
 }
 
 //////////////////////////////////
-//Error printing functions
+//Error Printing Functions
 //////////////////////////////////
-
-let IN_COLOR = false;
-
-function inRed(str: string): string {
-    if (IN_COLOR) {
-        return colors.red(str);
-    } else {
-        return str;
-    }
-}
 
 function errorUnexpectedType(token: Token): string {
     return inRed(`Error at ${token.docLocation()} : unexpected ${token.type}`);
