@@ -31,7 +31,7 @@ class DocLocation {
     lineNumber: number = 0;
     cursor: number = 0;
 
-    toString() : string{
+    toString(): string {
         return `"${this.srcPath}:${this.lineNumber + 1}:${this.column + 1}"`
     }
 
@@ -43,8 +43,6 @@ class DocLocation {
         copy.cursor = this.cursor;
         return copy;
     }
-
-
 }
 
 class Token {
@@ -57,6 +55,23 @@ class Token {
     type: TokenTypes = 'unknown';
     text: string = '';
     pos: DocLocation;
+
+    static createToken(type: TokenTypes, pos: DocLocation) {
+        let token = new Token();
+        token.type = type;
+        token.pos = pos.copy();
+
+        return token;
+    }
+
+    static createTextToken(pos: DocLocation, text: string) {
+        let token = new Token();
+        token.type = 'text';
+        token.pos = pos.copy();
+        token.text = text;
+
+        return token;
+    }
 
     docLocation(): string {
         return this.pos.toString();
@@ -86,13 +101,7 @@ function pushTextTokenToTokenArray(tokenArray: Token[], textToken: Token) {
 
 function pushTextToTokenArray(tokenArray: Token[], text: string, pos: DocLocation) {
     if (tokenArray.length <= 0 || last(tokenArray).type !== 'text') {
-
-        let textToken = new Token();
-        textToken.type = 'text';
-        textToken.pos = pos.copy();
-        textToken.text = text;
-
-        tokenArray.push(textToken);
+        tokenArray.push(Token.createTextToken(pos, text));
     }
     else {
         last(tokenArray).text += text;
@@ -140,11 +149,7 @@ function tokenize(srcText: string, srcPath: string): Token[] {
 
         for (const tokenStr of Token.LITERAL_TOKENS) {
             if (srcText.startsWith(tokenStr, currentPos.cursor)) {
-                let token = new Token();
-                token.type = tokenStr;
-                token.pos = currentPos.copy();
-
-                tokens.push(token);
+                tokens.push(Token.createToken(tokenStr, currentPos));
 
                 currentPos.cursor += tokenStr.length;
                 currentPos.column += tokenStr.length;
@@ -246,7 +251,7 @@ function checkMatchAndRefineTokens(tokens: Token[]): [Token[], string | null] {
                 } break;
                 case ':': {
                     newTokens.push(tokenNow);
-                }break;
+                } break;
                 case '}': {
                     if (insideQuote) {
                         pushTextToTokenArray(newTokens, tokenNow.type, tokenNow.pos)
@@ -395,9 +400,9 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
                 //parse tokens inside attributes to item attributes
                 let insideQuote = false;
 
-                let words : string[]= [];
+                let words: string[] = [];
 
-                let colonPositions : number[] = []; // where : is
+                let colonPositions: number[] = []; // where : is
                 // say in words array we have "a b c" and : was between b and c "a b : c"
                 // then we push colonPosition array position of b 1
 
@@ -414,42 +419,42 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
                             } else {
                                 words = words.concat(stringToWords(tokenInAttr.text));
                             }
-                        }break;
+                        } break;
                         case '"': {
                             insideQuote = !insideQuote;
-                        }break;
+                        } break;
                         case ':': {
-                            if(i == 0){
+                            if (i == 0) {
                                 return [root, errorMissingTextNextColon(tokenInAttr, true)];
-                            }else if(i >= attributeTokens.length -1){
+                            } else if (i >= attributeTokens.length - 1) {
                                 return [root, errorMissingTextNextColon(tokenInAttr, false)];
                             }
 
                             colonPositions.push(words.length - 1);
-                        }break;
+                        } break;
                     }
                 }
-                let wordIsAttribute : boolean[] = Array(words.length).fill(false);
+                let wordIsAttribute: boolean[] = Array(words.length).fill(false);
 
-                for(const pos of colonPositions){
+                for (const pos of colonPositions) {
                     wordIsAttribute[pos] = true;
-                    wordIsAttribute[pos+1] = true;
+                    wordIsAttribute[pos + 1] = true;
 
-                    let wordAtLeft : string = words[pos];
-                    let wordAtRight : string = words[pos+1];
-                    
+                    let wordAtLeft: string = words[pos];
+                    let wordAtRight: string = words[pos + 1];
+
                     itemNow.attributeMap.set(wordAtLeft, wordAtRight);
                 }
 
-                for(let i=0; i<words.length; i++){
-                    if(!wordIsAttribute[i]){
+                for (let i = 0; i < words.length; i++) {
+                    if (!wordIsAttribute[i]) {
                         itemNow.attributeList.push(words[i]);
                     }
                 }
 
                 attributeTokens = [];
                 tokenCursor += 1; // after { here, ignore [ 
-                insideBody = true; 
+                insideBody = true;
             } else {
                 attributeTokens.push(tokenNow);
             }
@@ -496,7 +501,7 @@ function parse(srcText: string, srcPath: string,
     if (errorMsg) {
         return [root, errorMsg];
     }
-    
+
     [root, errorMsg] = convertTokensToItems(tokens);
 
     if (errorMsg) {
@@ -885,4 +890,4 @@ function errorMissingTextNextColon(colonToken: Token, missingAtLeft: boolean) {
     return inRed(`Error : missing word at ${leftOrRight} for ':' at ${colonToken.docLocation()}`);
 }
 
-export { Item, parse, treeToPrettyText , treeToText }
+export { Item, parse, treeToPrettyText, treeToText }
