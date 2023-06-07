@@ -408,6 +408,7 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
 
                 //for example "a : b c : d e"
                 //colonPositions = [0, 2]
+                let colonTokens : Token[] = [];
 
                 for (let i = 0; i < attributeTokens.length; i++) {
                     let tokenInAttr = attributeTokens[i];
@@ -424,19 +425,30 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
                             insideQuote = !insideQuote;
                         } break;
                         case ':': {
-                            if (i == 0) {
-                                return [root, errorMissingTextNextColon(tokenInAttr, true)];
-                            } else if (i >= attributeTokens.length - 1) {
-                                return [root, errorMissingTextNextColon(tokenInAttr, false)];
-                            }
-
                             colonPositions.push(words.length - 1);
+                            colonTokens.push(tokenInAttr);
                         } break;
                     }
                 }
                 let wordIsAttribute: boolean[] = Array(words.length).fill(false);
 
-                for (const pos of colonPositions) {
+                
+
+                //for (const pos of colonPositions) {
+                for(let i=0; i<colonPositions.length; i++){
+                    const pos = colonPositions[i]
+                    const colonToken = colonTokens[i]
+                    
+                    if(i >= 1 && (colonPositions[i-1] + 1  === pos)){
+                        //this is for the cases like this a : b : c
+                        return [root, errorMissingTextNextColon(colonToken, true)];
+                    }
+
+                    if (pos < 0) {
+                        return [root, errorMissingTextNextColon(colonToken, true)];
+                    } else if (pos + 1 >= wordIsAttribute.length) {
+                        return [root, errorMissingTextNextColon(colonToken, false)];
+                    }
                     wordIsAttribute[pos] = true;
                     wordIsAttribute[pos + 1] = true;
 
@@ -802,6 +814,24 @@ function treeToPrettyText(root: Item, inColor: boolean = true, level = 0): strin
         }
     }
 
+    if(root.attributeMap.size > 0 && root.attributeList.length > 0){
+        toPrint += ', ';
+    }
+
+    {
+        let i=0;
+        for(const [key, value] of root.attributeMap){
+            toPrint += inGreen(`"${key.replace(/\"/g, '\\"')}"`);
+            toPrint += ' : '
+            toPrint += inGreen(`"${value.replace(/\"/g, '\\"')}"`);
+
+            if (i < root.attributeMap.size - 1) {
+                toPrint += ', '
+            }
+            i++
+        }
+    }
+
     toPrint += inBlue('}');
 
     if (root.body.length === 1 && typeof root.body[0] === 'string') {
@@ -832,6 +862,13 @@ function treeToText(root: Item, inColor: boolean = false): string {
         const attrStr = inGreen(`"${attr.replace(/"/g, '\\"')}"`);
         text += ` ${attrStr}`
     }
+
+    for(const [key, value] of root.attributeMap){
+        const keyStr = inGreen(`"${key.replace(/"/g, '\\"')}"`);
+        const valueStr = inGreen(`"${value.replace(/"/g, '\\"')}"`);
+        text += ` ${keyStr} : ${valueStr}`
+    }
+
     text += ' ' + inBlue('}[')
     for (const child of root.body) {
         if (typeof child === 'string') {
@@ -846,27 +883,23 @@ function treeToText(root: Item, inColor: boolean = false): string {
     return text;
 }
 
-/**
- * This function is mainly for converting it to
- * JSON string because It's impossible(?) to
- * represent circular relation in json
- * @param root 
- */
-function removeParentFromTree(root: Item): Object {
-    let copy: any = {};
+function makeCloneForeJSONprinting(root: Item): Object {
+    let copy: any = new Item();
 
-    for (const key of Object.keys(root)) {
-        if (key !== 'parent' && key !== 'body') {
-            copy[key] = root[key];
-        }
+    copy.attributeList = copy.attributeList.concat(root.attributeList);
+    copy.attributeMap = {};
+
+    for(const [key, value] of root.attributeMap){
+        copy.attributeMap[key as any] = value;
     }
-    copy.body = [];
+
+    delete copy.parent;
 
     for (const child of root.body) {
         if (typeof child === 'string') {
             copy.body.push(child);
         } else {
-            copy.body.push(removeParentFromTree(child));
+            copy.body.push(makeCloneForeJSONprinting(child));
         }
     }
 
@@ -874,7 +907,7 @@ function removeParentFromTree(root: Item): Object {
 }
 
 function treeToJsonText(root: Item): string {
-    let clone = removeParentFromTree(root);
+    let clone = makeCloneForeJSONprinting(root);
 
     return JSON.stringify(clone, null, 4)
 }
@@ -923,4 +956,4 @@ function errorMissingTextNextColon(colonToken: Token, missingAtLeft: boolean) {
     return inRed(`Error : missing word at ${leftOrRight} for ':' at ${colonToken.docLocation()}`);
 }
 
-export { Item, parse, treeToPrettyText, treeToText, removeParentFromTree, treeToJsonText }
+export { Item, parse, treeToPrettyText, treeToText, treeToJsonText }
