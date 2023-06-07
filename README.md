@@ -14,7 +14,7 @@ let text =
 
 {|div}[
     {|em}[Hi buddy!|]
-    Sup~
+    {|img file : "./sup.png"|}
     [|Howdy|]
 |]
 
@@ -44,7 +44,13 @@ let [root, errorMsg] = st.parse(text, '');
                     "attributeMap": {},
                     "body": ["Hi buddy!"]
                 },
-                "\nSup~\n",
+                "\n",
+                {
+                    "attributeList": ["img"],
+                    "attributeMap": {"file": "./sup.png"},
+                    "body": []
+                },
+                "\n",
                 {
                     "attributeList": [],
                     "attributeMap": {},
@@ -65,10 +71,15 @@ Syntax is like this
 outer text
 {| attribute1 key : "and value"}[
     some text
+    
     {|"child attribute 1" "child attribute 2"}[
         child text
     |]
+
     [|body with no attributes|]
+
+    {|"has body" : false|}
+
     other text
 |]
 other outer text
@@ -88,7 +99,7 @@ And it will convert this file to javascript objects.
             "attributeList": ["attribute1"],
             "attributeMap": {"key": "and value"},
             "body": [
-                "some text\n",
+                "some text\n\n",
                 {
                     "attributeList": [
                         "child attribute 1",
@@ -97,13 +108,19 @@ And it will convert this file to javascript objects.
                     "attributeMap": {},
                     "body": ["child text"]
                 },
-                "\n",
+                "\n\n",
                 {
                     "attributeList": [],
                     "attributeMap": {},
                     "body": ["body with no attributes"]
                 },
-                "\nother text"
+                "\n\n",
+                {
+                    "attributeList": [],
+                    "attributeMap": {"has body": "false"},
+                    "body": []
+                },
+                "\n\nother text"
             ]
         },
         "\nother outer text"
@@ -160,7 +177,7 @@ in most outer body, you only need to escpae
 
 {|
     in attributes you only need to escape
-    @} @" @:
+    @} @" @: @|}
 }
 [
     same as most outer body, you only need to escpae
