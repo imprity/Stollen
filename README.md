@@ -2,7 +2,7 @@
 
 *it's like [pollen](https://git.matthewbutterick.com/mbutterick/pollen) but stolen (and bad)*
 
-It's a simple markup langage that can be compiled(?) to tree of javascript object.
+It's a simple markup langage that can be compiled(?) to tree of javascript objects.
 
 # Basic Usage
 
@@ -10,7 +10,7 @@ It's a simple markup langage that can be compiled(?) to tree of javascript objec
 const st = require('stollen');
 
 let text = 
-`{|h1}[Hello World|]
+`{|h1 class : title}[Hello World|]
 
 {|div}[
     {|em}[Hi buddy!|]
@@ -25,25 +25,29 @@ let [root, errorMsg] = st.parse(text, '');
 
 
 /*produces tree that looks like this
-
 {
-    "attributes": [],
+    "attributeList": [],
+    "attributeMap": {},
     "body": [
         {
-            "attributes": ["h1"],
+            "attributeList": ["h1"],
+            "attributeMap": {"class": "title"},
             "body": ["Hello World"]
         },
         "\n\n",
         {
-            "attributes": ["div"],
+            "attributeList": ["div"],
+            "attributeMap": {},
             "body": [
                 {
-                    "attributes": ["em"],
+                    "attributeList": ["em"],
+                    "attributeMap": {},
                     "body": ["Hi buddy!"]
                 },
                 "\nSup~\n",
                 {
-                    "attributes": [],
+                    "attributeList": [],
+                    "attributeMap": {},
                     "body": ["Howdy"]
                 }
             ]
@@ -59,7 +63,7 @@ Syntax is like this
 
 ```
 outer text
-{| attribute1 attribute2 attribute3}[
+{| attribute1 key : "and value"}[
     some text
     {|"child attribute 1" "child attribute 2"}[
         child text
@@ -76,27 +80,27 @@ And it will convert this file to javascript objects.
 //it also has a pointer to it's parent
 //but I don't know how to describe circular relations with JSON
 {
-    "attributes": [],
+    "attributeList": [],
+    "attributeMap": {},
     "body": [
         "outer text\n",
         {
-            "attributes": [
-                "attribute1",
-                "attribute2",
-                "attribute3"
-            ],
+            "attributeList": ["attribute1"],
+            "attributeMap": {"key": "and value"},
             "body": [
                 "some text\n",
                 {
-                    "attributes": [
+                    "attributeList": [
                         "child attribute 1",
                         "child attribute 2"
                     ],
+                    "attributeMap": {},
                     "body": ["child text"]
                 },
                 "\n",
                 {
-                    "attributes": [],
+                    "attributeList": [],
+                    "attributeMap": {},
                     "body": ["body with no attributes"]
                 },
                 "\nother text"
@@ -122,12 +126,12 @@ Stollen checks how much the first line is indented. For example :
     dog
 |]
 ```
-In this case first line cat starts with 4 spaces.
+In this case first line 'cat' starts with 4 spaces.
 Stollen notices this and removes following lines 4 spaces.
 
-But what about cases where you want to start the text with tab or spaces?
+But what about the cases where you want to start the text with tab or spaces?
 
-In those cases, you can start your text with `|` and then insert whitespaces.
+In these cases, you can start your text with `|` and then insert whitespaces.
 
 ```
 {|div}[
@@ -136,7 +140,7 @@ In those cases, you can start your text with `|` and then insert whitespaces.
 |]
 ```
 
-Stollen always ignore first `|` after indent in multi-line text.
+Stollen always ignore the first `|` after indent in multi-line text.
 
 If you want to start your multi-line text with `|`, just put it two times   
 (sorry but it was the best I could come up with)
@@ -156,7 +160,7 @@ in most outer body, you only need to escpae
 
 {|
     in attributes you only need to escape
-    @} @"
+    @} @" @:
 }
 [
     same as most outer body, you only need to escpae
