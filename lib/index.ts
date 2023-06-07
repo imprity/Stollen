@@ -100,6 +100,10 @@ function pushTextTokenToTokenArray(tokenArray: Token[], textToken: Token) {
 }
 
 function pushTextToTokenArray(tokenArray: Token[], text: string, pos: DocLocation) {
+    if(text.length === 0){
+        return;
+    }
+
     if (tokenArray.length <= 0 || last(tokenArray).type !== 'text') {
         tokenArray.push(Token.createTextToken(pos, text));
     }
@@ -108,73 +112,166 @@ function pushTextToTokenArray(tokenArray: Token[], text: string, pos: DocLocatio
     }
 }
 
+type TokenTypeOrEscape = TokenTypes | typeof ESCAPE_CHAR;
+
+function consumeTextUntil(text: string, start: DocLocation, type: TokenTypeOrEscape | TokenTypeOrEscape[]): {
+    consumedText: string
+    foundType: TokenTypeOrEscape | null,
+    newPos: DocLocation,
+} {
+    if (typeof type === 'string') {
+        type = [type];
+    }
+
+    let consumedText = "";
+    let found = false;
+    let foundType: null | TokenTypeOrEscape = null;
+
+    let newPos = start.copy();
+
+    while (newPos.cursor < text.length) {
+
+        for (const t of type) {
+            if (text.startsWith(t, newPos.cursor)) {
+                found = true;
+
+                foundType = t;
+
+                break;
+            }
+        }
+
+        if (found) {
+            break;
+        }
+
+        let char = text[newPos.cursor]
+
+        if (char === '\n') {
+            newPos.column = 0;
+            newPos.lineNumber++;
+        } else {
+            newPos.column++;
+        }
+
+        consumedText += char;
+        newPos.cursor++;
+    }
+
+    return {
+        consumedText: consumedText,
+        foundType: foundType,
+        newPos: newPos,
+    }
+}
+
+function consumeWhiteSpace(text: string, start: DocLocation): {
+    consumedText: string
+    newPos: DocLocation
+} {
+    let consumedText = "";
+    let newPos = start.copy();
+
+    let re = /\S/;
+    let match = re.exec(text.slice(start.cursor));
+
+    if (match === null) {
+        consumedText = text.slice(start.cursor)
+    } else {
+        consumedText = text.slice(start.cursor, match.index);
+    }
+
+    for (let i = 0; i < consumedText.length; i++) {
+        let char = consumedText[i];
+        if (char === '\n') {
+            newPos.column = 0;
+            newPos.lineNumber++;
+        } else {
+            newPos.column++;
+        }
+
+        newPos.cursor++;
+    }
+
+    return {
+        consumedText: consumedText,
+        newPos: newPos
+    };
+}
+
+type TokenizerState = {
+    toExtpect: TokenTypeOrEscape[],
+    onToken: Map<TokenTypeOrEscape, number>
+}
+
+const TOKENIZER_STATES: TokenizerState[] = [
+    {
+        toExtpect: ['@', '{|', '[|', '|]', ],
+        onToken: new Map([['@', 0], ['{|', 1], ['[|', 0], ['|]', 0]])
+    },
+    {
+        toExtpect: ['@', ':', '"', '}'],
+        onToken: new Map([['@', 1], [':', 1], ['"', 2], ['}', 3]])
+    },
+    {
+        toExtpect: ['@', '"'],
+        onToken: new Map([['@', 2], ['"', 1]])
+    },
+    {
+        toExtpect: ['@', '['],
+        onToken: new Map([['@', 3], ['[', 0]])
+    }
+]
+
 function tokenize(srcText: string, srcPath: string): Token[] {
     let tokens: Token[] = [];
     let currentPos: DocLocation = new DocLocation();
 
     currentPos.srcPath = srcPath;
 
+    let state: TokenizerState = TOKENIZER_STATES[0];
+
+    let toExpect = state.toExtpect;
+
     while (currentPos.cursor < srcText.length) {
-        //first check escape characters
-        let escapedToken = false;
+        let got = consumeTextUntil(srcText, currentPos, toExpect);
+        pushTextToTokenArray(tokens, got.consumedText, currentPos);
 
-        if (srcText.startsWith(ESCAPE_CHAR, currentPos.cursor)) {
-            escapedToken = true;
+        currentPos = got.newPos;
 
-            currentPos.cursor += ESCAPE_CHAR.length;
-            currentPos.column += ESCAPE_CHAR.length;
-
-            if (srcText.startsWith(ESCAPE_CHAR, currentPos.cursor)) {
-                pushTextToTokenArray(tokens, ESCAPE_CHAR, currentPos);
+        if (got.foundType !== null) {
+            if (got.foundType === '@') {
+                //escape following token
                 currentPos.cursor += ESCAPE_CHAR.length;
                 currentPos.column += ESCAPE_CHAR.length;
-            } else {
-                for (const tokenStr of Token.LITERAL_TOKENS) {
-                    if (srcText.startsWith(tokenStr, currentPos.cursor)) {
-                        pushTextToTokenArray(tokens, tokenStr, currentPos);
-                        currentPos.cursor += tokenStr.length;
-                        currentPos.column += tokenStr.length;
-                        break;
+
+                if (srcText.startsWith(ESCAPE_CHAR, currentPos.cursor)) {
+                    pushTextToTokenArray(tokens, ESCAPE_CHAR, currentPos);
+                    currentPos.cursor += ESCAPE_CHAR.length;
+                    currentPos.column += ESCAPE_CHAR.length;
+                } else {
+                    for (const tokenStr of Token.LITERAL_TOKENS) {
+                        if (srcText.startsWith(tokenStr, currentPos.cursor)) {
+                            pushTextToTokenArray(tokens, tokenStr, currentPos);
+                            currentPos.cursor += tokenStr.length;
+                            currentPos.column += tokenStr.length;
+                            break;
+                        }
                     }
                 }
+
+            }else{
+                tokens.push(Token.createToken(got.foundType, currentPos));
+                currentPos.cursor += got.foundType.length;
+                currentPos.column += got.foundType.length;
+
+                state = TOKENIZER_STATES[state.onToken.get(got.foundType)];
+
+                toExpect = state.toExtpect;
             }
-        }
-
-        if (escapedToken) {
-            continue;
-        }
-
-        //check if string starts with token literal
-        let tokenLiteralFound = false;
-
-        for (const tokenStr of Token.LITERAL_TOKENS) {
-            if (srcText.startsWith(tokenStr, currentPos.cursor)) {
-                tokens.push(Token.createToken(tokenStr, currentPos));
-
-                currentPos.cursor += tokenStr.length;
-                currentPos.column += tokenStr.length;
-
-                tokenLiteralFound = true;
-                break;
-            }
-        }
-
-        if (tokenLiteralFound) {
-            continue;
-        }
-
-        //everything else we just treat them as text
-        let currentChar = srcText[currentPos.cursor];
-        pushTextToTokenArray(tokens, currentChar, currentPos);
-        currentPos.cursor++;
-
-        if (currentChar === '\n') {
-            currentPos.column = 0;
-            currentPos.lineNumber++;
-        } else {
-            currentPos.column++
         }
     }
+    
     return tokens;
 }
 
@@ -408,7 +505,7 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
 
                 //for example "a : b c : d e"
                 //colonPositions = [0, 2]
-                let colonTokens : Token[] = [];
+                let colonTokens: Token[] = [];
 
                 for (let i = 0; i < attributeTokens.length; i++) {
                     let tokenInAttr = attributeTokens[i];
@@ -432,14 +529,14 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
                 }
                 let wordIsAttribute: boolean[] = Array(words.length).fill(false);
 
-                
+
 
                 //for (const pos of colonPositions) {
-                for(let i=0; i<colonPositions.length; i++){
+                for (let i = 0; i < colonPositions.length; i++) {
                     const pos = colonPositions[i]
                     const colonToken = colonTokens[i]
-                    
-                    if(i >= 1 && (colonPositions[i-1] + 1  === pos)){
+
+                    if (i >= 1 && (colonPositions[i - 1] + 1 === pos)) {
                         //this is for the cases like this a : b : c
                         return [root, errorMissingTextNextColon(colonToken, true)];
                     }
@@ -814,13 +911,13 @@ function treeToPrettyText(root: Item, inColor: boolean = true, level = 0): strin
         }
     }
 
-    if(root.attributeMap.size > 0 && root.attributeList.length > 0){
+    if (root.attributeMap.size > 0 && root.attributeList.length > 0) {
         toPrint += ', ';
     }
 
     {
-        let i=0;
-        for(const [key, value] of root.attributeMap){
+        let i = 0;
+        for (const [key, value] of root.attributeMap) {
             toPrint += inGreen(`"${key.replace(/\"/g, '\\"')}"`);
             toPrint += ' : '
             toPrint += inGreen(`"${value.replace(/\"/g, '\\"')}"`);
@@ -863,7 +960,7 @@ function treeToText(root: Item, inColor: boolean = false): string {
         text += ` ${attrStr}`
     }
 
-    for(const [key, value] of root.attributeMap){
+    for (const [key, value] of root.attributeMap) {
         const keyStr = inGreen(`"${key.replace(/"/g, '\\"')}"`);
         const valueStr = inGreen(`"${value.replace(/"/g, '\\"')}"`);
         text += ` ${keyStr} : ${valueStr}`
@@ -889,7 +986,7 @@ function makeCloneForeJSONprinting(root: Item): Object {
     copy.attributeList = copy.attributeList.concat(root.attributeList);
     copy.attributeMap = {};
 
-    for(const [key, value] of root.attributeMap){
+    for (const [key, value] of root.attributeMap) {
         copy.attributeMap[key as any] = value;
     }
 

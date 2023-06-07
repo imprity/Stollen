@@ -1,2 +1,2 @@
 ERROR
-Error at "error3.frt:1:15" : expected [ but got :
+Error at "error3.frt:1:14" : expected whitespace but got text
