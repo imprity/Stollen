@@ -27,6 +27,14 @@ class TestCase {
     }
 }
 
+let PREV_TIME : number = 0;
+function startTimer(){
+    PREV_TIME = Date.now();
+}
+function endTimer(){
+    return Date.now() - PREV_TIME;
+}
+
 //perform full test
 if (args.length === 0) {
     let testCases: TestCase[] = getAllTheTestCases();
@@ -34,11 +42,19 @@ if (args.length === 0) {
     let failedTestsLFlineEnding: TestCase[] = [];
     let failedTestsCRLFlineEnding : TestCase[] = [];
 
+    let totalTime = 0;
+
     for (const testCase of testCases) {
+        startTimer();
         let resultLF = parseSrcAndConvertToTestCase(testCase.srcText, testCase.fileName);
+        totalTime += endTimer();
+
         let expectedResultLF = ''
 
+        startTimer();
         let resultCRLF = parseSrcAndConvertToTestCase(changeLFtoCRLF(testCase.srcText), testCase.fileName, '\r\n');
+        totalTime += endTimer();
+
         let expectedResultCRLF = ''
         let readFile = false;
         try {
@@ -116,6 +132,7 @@ if (args.length === 0) {
 
     if(failedTestsLFlineEnding.length === 0 && failedTestsCRLFlineEnding.length === 0) {
         console.log('Test Success!!!')
+        console.log(`Time took : ${totalTime} milliseconds`)
     }
     process.exit(0);
 }

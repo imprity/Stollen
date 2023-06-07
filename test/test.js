@@ -53,17 +53,29 @@ var TestCase = /** @class */ (function () {
     }
     return TestCase;
 }());
+var PREV_TIME = 0;
+function startTimer() {
+    PREV_TIME = Date.now();
+}
+function endTimer() {
+    return Date.now() - PREV_TIME;
+}
 //perform full test
 if (args.length === 0) {
     var testCases = getAllTheTestCases();
     var failedTestsLFlineEnding = [];
     var failedTestsCRLFlineEnding = [];
+    var totalTime = 0;
     try {
         for (var testCases_1 = __values(testCases), testCases_1_1 = testCases_1.next(); !testCases_1_1.done; testCases_1_1 = testCases_1.next()) {
             var testCase = testCases_1_1.value;
+            startTimer();
             var resultLF = parseSrcAndConvertToTestCase(testCase.srcText, testCase.fileName);
+            totalTime += endTimer();
             var expectedResultLF = '';
+            startTimer();
             var resultCRLF = parseSrcAndConvertToTestCase(changeLFtoCRLF(testCase.srcText), testCase.fileName, '\r\n');
+            totalTime += endTimer();
             var expectedResultCRLF = '';
             var readFile = false;
             try {
@@ -203,6 +215,7 @@ if (args.length === 0) {
     }
     if (failedTestsLFlineEnding.length === 0 && failedTestsCRLFlineEnding.length === 0) {
         console.log('Test Success!!!');
+        console.log("Time took : ".concat(totalTime, " milliseconds"));
     }
     process.exit(0);
 }
