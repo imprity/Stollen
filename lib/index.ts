@@ -23,7 +23,7 @@ function first<T>(arr: T[]): T | null {
 //////////////////////////////////
 
 const ESCAPE_CHAR = '@'
-type TokenTypes = '{|' | ":" | '}' | '[' | '[|' | '|]' | '"' | 'text' | 'unknown';
+type TokenTypes = '{|' | ":" | '}' | '|}' | '[' | '[|' | '|]' | '"' | 'text' | 'unknown';
 
 class DocLocation {
     srcPath: string
@@ -46,7 +46,7 @@ class DocLocation {
 }
 
 class Token {
-    static readonly LITERAL_TOKENS: TokenTypes[] = ['{|', ":", '}', '[', '[|', '|]', '"'].sort(
+    static readonly LITERAL_TOKENS: TokenTypes[] = ['{|', ":", '}', '|}', '[', '[|', '|]', '"'].sort(
         (a, b) => { return b.length - a.length }
         // we need to sort them from longest to shortest
         // because we tokenizer might read [| and think it's a [ token when it should be [|
@@ -210,8 +210,8 @@ const TOKENIZER_STATES: TokenizerState[] = [
         onToken: new Map([['@', 0], ['{|', 1], ['[|', 0], ['|]', 0]])
     },
     {
-        toExtpect: ['@', ':', '"', '}'],
-        onToken: new Map([['@', 1], [':', 1], ['"', 2], ['}', 3]])
+        toExtpect: ['@', ':', '"', '}', '|}'],
+        onToken: new Map([['@', 1], [':', 1], ['"', 2], ['}', 3], ['|}', 0]])
     },
     {
         toExtpect: ['@', '"'],
@@ -401,6 +401,14 @@ function checkMatchAndRefineTokens(tokens: Token[]): [Token[], string | null] {
                         insideBody = true;
                     }
                 } break;
+                case '|}':{
+                    if (insideQuote) {
+                        pushTextToTokenArray(newTokens, tokenNow.type, tokenNow.pos)
+                    }else{
+                        newTokens.push(tokenNow)
+                        insideBody = true;
+                    }
+                }break;
                 default: {
                     pushTextToTokenArray(newTokens, tokenNow.type, tokenNow.pos);
                 } break;
@@ -493,7 +501,7 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
                 } break;
             }
         } else {
-            if (tokenNow.type === '}') {
+            if (tokenNow.type === '}' || tokenNow.type === '|}') {
                 //parse tokens inside attributes to item attributes
                 let insideQuote = false;
 
@@ -529,8 +537,6 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
                 }
                 let wordIsAttribute: boolean[] = Array(words.length).fill(false);
 
-
-
                 //for (const pos of colonPositions) {
                 for (let i = 0; i < colonPositions.length; i++) {
                     const pos = colonPositions[i]
@@ -561,8 +567,13 @@ function convertTokensToItems(tokens: Token[]): [Item, string | null] {
                     }
                 }
 
+                if(tokenNow.type === '|}'){
+                    objectStack.pop();
+                }else{
+                    tokenCursor += 1; // after } here, ignore [ 
+                }
+
                 attributeTokens = [];
-                tokenCursor += 1; // after { here, ignore [ 
                 insideBody = true;
             } else {
                 attributeTokens.push(tokenNow);
