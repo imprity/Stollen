@@ -980,13 +980,13 @@ function treeToText(root: Item, inColor: boolean = false): string {
 
     let text = inBlue("{|");
     for (const attr of root.attributeList) {
-        const attrStr = inGreen(`"${attr.replace(/"/g, '\\"')}"`);
+        const attrStr = inGreen(`"${attr.replace(/"/g, '@"')}"`);
         text += ` ${attrStr}`
     }
 
     for (const [key, value] of root.attributeMap) {
-        const keyStr = inGreen(`"${key.replace(/"/g, '\\"')}"`);
-        const valueStr = inGreen(`"${value.replace(/"/g, '\\"')}"`);
+        const keyStr = inGreen(`"${key.replace(/"/g, '@"')}"`);
+        const valueStr = inGreen(`"${value.replace(/"/g, '@"')}"`);
         text += ` ${keyStr} : ${valueStr}`
     }
 
