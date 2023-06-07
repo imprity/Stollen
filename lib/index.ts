@@ -890,6 +890,14 @@ function inBlue(str: string): string {
     }
 }
 
+function inGrey(str: string): string {
+    if (IN_COLOR) {
+        return colors.grey(str);
+    } else {
+        return str;
+    }
+}
+
 //////////////////////////////////
 //Tree Printing Functions
 //////////////////////////////////
@@ -942,15 +950,20 @@ function treeToPrettyText(root: Item, inColor: boolean = true, level = 0): strin
 
     toPrint += inBlue('}');
 
-    if (root.body.length === 1 && typeof root.body[0] === 'string') {
-        return toPrint += ' "' + root.body[0].replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + inBlue(']');
+    if(root.body.length === 0){
+        return toPrint += ' ' + inBlue(']')
+    }
+    else if (root.body.length === 1 && typeof root.body[0] === 'string') {
+        return toPrint += ' "' + root.body[0]
+            .replace(/\r\n/g, inGrey('\\r\\n')).replace(/\n/g, inGrey('\\n')) + '"' + inBlue(']');
     }
     else {
         toPrint += '\n'
 
         for (const child of root.body) {
             if (typeof child === 'string') {
-                toPrint += indent + singleTab + '"' + child.replace(/\r\n/g, '\\r\\n').replace(/\n/g, '\\n') + '"' + '\n';
+                toPrint += indent + singleTab + '"' + child
+                    .replace(/\r\n/g, inGrey('\\r\\n')).replace(/\n/g, inGrey('\\n')) + '"' + '\n';
             }
             else {
                 toPrint += treeToPrettyText(child, inColor, level + 1) + '\n';
