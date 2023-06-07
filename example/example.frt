@@ -5,11 +5,11 @@
 This webpage is made using stollen.
 
 The name is stollen becuase I stole most of the idea from {|a 
-https://git.matthewbutterick.com/mbutterick/pollen}[pollen|].
+"https://git.matthewbutterick.com/mbutterick/pollen"}[pollen|].
 
 And because I didn't want to just use {|
 	a 
-	https://git.matthewbutterick.com/mbutterick/pollen
+	"https://git.matthewbutterick.com/mbutterick/pollen"
 }
 [pollen|] because I didn't want to learn racket. (And I wanted to learn how to make simple compiler)
 
