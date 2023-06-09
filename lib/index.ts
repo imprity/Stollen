@@ -437,7 +437,7 @@ function checkMatchAndRefineTokens(tokens: Token[]): [Token[], string | null] {
 
 class Item {
     attributeList: Array<string> = [];
-    attributeMap: Map<String, String> = new Map<string, string>();
+    attributeMap: Map<string, string> = new Map<string, string>();
 
     body: Array<string | Item> = [];
     parent: Item | null = null;
